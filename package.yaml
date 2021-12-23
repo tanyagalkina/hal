@@ -21,6 +21,10 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- haskeline
+- containers
+- mtl
+
 
 library:
   source-dirs: src
@@ -38,14 +42,11 @@ executables:
     - haskeline  
 
 tests:
-  hal-test:
-    main:                Spec.hs
-    source-dirs:         test
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
+  First:
+    defaults: hspec/hspec@master
     dependencies:
     - hal
     - HUnit 
+    - QuickCheck
+
       
