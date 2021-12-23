@@ -6,9 +6,11 @@ import System.Environment ( getArgs )
 
 import Repl
 import Errors
+import Types
 
-ctx = "Mama!"
+
+context = initCtx
 
 main :: IO ()
 main =  getArgs >>= \argv -> 
-     if' (length argv == 0) (repl ctx) (manager argv ctx (elem "-i" argv))
+     if' (length argv == 0) (repl context) (manager argv context (elem "-i" argv))

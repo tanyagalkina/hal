@@ -10,6 +10,7 @@ module Errors
 import System.Console.Haskeline
 import System.Exit
 import Repl
+import Types
 import Control.Exception
 --import System.Environment (getArgs)
 
@@ -34,28 +35,20 @@ if' :: Bool -> a -> a -> a
 if' True  x _ = x
 if' False _ y = y
 
-areValidFileExtentions :: [String] -> Int
--- if there is  '-i' flag in the args means you have to run repl!
-areValidFileExtentions args | elem "-i" args = 42
--- some invalid args
-areValidFileExtentions args | cannotReadFile args = 84
-areValidFileExtentions args = 21
 
--- evalLispExpression input mama
 --- ---------[ARGS]   -> CTX
-manager :: [String] -> String -> Bool -> IO ()
+manager :: [String] -> Ctx -> Bool -> IO ()
 manager [] ctx True = repl ctx
 manager [] ctx False = exitWith ExitSuccess
---manager (a:_) ctx flag = 
 manager (a:as) ctx flag =
-                  do
-                    src <- try $ readFile a
-                    case src of
-                        --- IF THERE WERE PROBLEMS WITH READING THE FILE
-                        Left e -> do
-                                    print (e :: IOError)
-                                    >> exitWith (ExitFailure 84)
-                        -- GOT TE FILE CONTENT, THEN ...->
-                        Right s -> do 
-                          let r@(code, res, ct) =  evalLisp s ctx
-                          if' (code == 84) (braveExit res 84) (if' (as == []) (print res >> exitWith ExitSuccess) (manager as ct flag))      
+        do
+          src <- try $ readFile a
+          case src of
+              --- IF THERE WERE PROBLEMS WITH READING THE FILE
+              Left e -> do
+                          print (e :: IOError)
+                          >> exitWith (ExitFailure 84)
+              -- GOT THE FILE CONTENT, THEN ...->
+              Right s -> do 
+                let r@(code, res, ct) =  evalLisp s ctx
+                if' (code == 84) (braveExit res 84) (if' (as == []) (print res >> manager as ct flag) (manager as ct flag))      

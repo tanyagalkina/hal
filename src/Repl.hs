@@ -5,29 +5,23 @@ module Repl
   ,evalLisp
 ) where
 
+import Debug.Trace
 import System.Console.Haskeline
 import System.Exit
 import Lexer (fromPairs, Parser, parse)
+import Types
 --import System.Environment (getArgs)
 
 
 justTest :: Int -> [Int]
 justTest n = [n, n]
 
-
--- printResult:: [(String, String)] -> IO ()
--- printResult [] = braveExit "Something went wrong .. the output is empty"  84
--- printResult res | snd (head res) /= "" =  
---                         braveExit ("I could not parse everything.. " ++ snd (head res) ++ fst (head res)) 84
-                        
---                 | otherwise =
---                    putStrLn $ fst (head res)   
-
- 
-evalLisp :: String -> String -> (Int, String, String)
+evalLisp :: String -> Ctx -> (Int, String, Ctx)
 evalLisp input ctx | output == [] = (84, "something went wrong!", ctx)
-                   | snd (head output) /= "" = (84, "could not", "parse everything")
-                   | True = (0, (fst (head output)), ctx ++ "HA!")
+                   | snd (head output) /= "" = (84, "could not parse everything!", ctx)
+                   | True = (0, (fst (head output)), ctx)
+                          --TRACING CONTEXT EXAMPLE
+                          --where output = traceShow ctx parse fromPairs input
                           where output = parse fromPairs input
                                  
 --evalLispExpression input ctx  = fst (head (parse fromPairs input))
@@ -36,23 +30,25 @@ evalLisp input ctx | output == [] = (84, "something went wrong!", ctx)
 
 
 evalLispExpression :: String -> String -> (String, String)
---evalLispExpression input ctx  = fst (head (parse fromPairs input))
-evalLispExpression input ctx  = ((fst (head (parse fromPairs input))), ctx ++ "a")
+--evalLispExpression input ctx  = traceShow ctx fst (head (parse fromPairs input))
+evalLispExpression input ctx  = traceShow ctx ((fst (head (parse fromPairs input))), ctx ++ "a")
 
 
-repl:: String -> IO ()
+repl:: Ctx -> IO ()
 repl ctx = runInputT defaultSettings (loop ctx)
    where
-       loop:: String -> InputT IO () 
+       loop:: Ctx -> InputT IO () 
        loop ctx = do
-                --outputStrLn ctx === FOR CHECKING THE CONTEXT!! 
+                --outputStrLn ctx === FOR CHECKING THE CONTEXT!!
                 minput <- getInputLine "% "
                 case minput of
-                    Nothing -> return ()
+                    Nothing -> do
+                              outputStrLn ""
+                              return ()
                     Just "quit" -> return ()
                     --Just input -> do outputStrLn $ "Input was: " ++ input
                     Just input -> do
-                                let res = evalLispExpression input ctx
-                                outputStrLn $ fst res 
-                                loop $ snd res
+                                let (_, output, context) = evalLisp input ctx
+                                outputStrLn output 
+                                loop context
                                         
