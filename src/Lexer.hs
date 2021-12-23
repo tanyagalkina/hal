@@ -6,7 +6,6 @@ fromPairs
 where
 
 
-import System.Console.Haskeline
 import System.Exit
 import System.Environment (getArgs)
 import Data.Char
