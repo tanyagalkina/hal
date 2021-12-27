@@ -26,9 +26,11 @@ source-repository head
 library
   exposed-modules:
       Errors
+      Grammer
       Lexer
       Lib
       Repl
+      SchEval
       Types
   other-modules:
       Paths_hal

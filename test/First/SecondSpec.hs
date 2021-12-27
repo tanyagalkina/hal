@@ -4,7 +4,7 @@ import Test.Hspec
 import Repl (
     justTest
     ,repl
-    ,evalLispExpression)
+    )
 import Errors (zeroto)    
 
 evalString = "this is not very simply string"

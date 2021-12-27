@@ -1,62 +1,15 @@
-module Lexer (
-fromPairs
-,Parser
-,parse
-)
+module Lexer
 where
 
 
+import Types
 import System.Exit
 import System.Environment (getArgs)
 import Data.Char
 import Control.Applicative
 import Debug.Trace
-
-
-newtype Parser a = P (String ->[(a, String)])
-
-parse :: Parser a -> String -> [(a,String)]
---parse (P p) input = traceShow ("trace" ++ show input) p input
-parse (P p) input = p input
-
-
-item :: Parser Char
-item = P (\input -> case input of
-                     []     -> []
-                     (x:xs) -> [(x,xs)])
-
-
-instance Functor Parser where
-   -- fmap :: (a -> b) -> Parser a -> Parser b
-   fmap g p = P (\input -> case parse p input of
-                            []        -> []
-                            [(v,out)] -> [(g v, out)])
-
-instance Applicative Parser where
-   -- pure :: a -> Parser a
-   pure v = P (\input -> [(v,input)])
-
-   -- <*> :: Parser (a -> b) -> Parser a -> Parser b
-   pg <*> px = P (\input -> case parse pg input of
-                             []        -> []
-                             [(g,out)] -> parse (fmap g px) out)
-
-instance Monad Parser where
-   -- (>>=) :: Parser a -> (a -> Parser b) -> Parser b
-   p >>= f = P (\input -> case parse p input of
-                           []        -> []
-                           [(v,out)] -> parse (f v) out)
-
-
-instance Alternative Parser where
-   -- empty :: Parser a
-   empty = P (\input -> [])
-
-   -- (<|>) :: Parser a -> Parser a -> Parser a
-   p <|> q = P (\input -> case parse p input of
-                           []        -> parse q input
-                           [(v,out)] -> [(v,out)])
-
+import Data.Typeable
+import Data.Kind
 
 sat :: (Char -> Bool) -> Parser Char
 sat p = item >>= \x ->
@@ -76,17 +29,11 @@ notQuote :: Char -> Bool
 notQuote c = (c /= '"')
 
 
-
 digitF' :: Parser Char
 digitF' = sat isFloatDigit
 
 char :: Char -> Parser Char
 char x = sat (== x)
-
-
-isSecondChoice          :: Char -> Bool
-isSecondChoice c      = (c == '-' || c == '+')
-       
 
 
 validFloat :: String -> Bool
@@ -95,44 +42,27 @@ validFloat xs | len == 1 || len == 0 = True
                   where len =  (length $ filter (== '.') xs)
 
 
-
-secondChoiceOp :: Parser Char
-secondChoiceOp = sat isSecondChoice
-
-
-multFloat:: Parser Float
-multFloat = do
-               char '*'
-               n <- pflt
-               return (n)
-            
-
 posflt :: Parser Float
-posflt = do char '+'
+posflt = do
+            -- _ <- many spaces 
+            char '+'
             n <- pflt
             return (n)
             <|> pflt
 
 
-
 pflt :: Parser Float
-pflt =  some digitF' >>= \xs ->
-              if validFloat xs
-                  then return (read xs)
-              else empty
+pflt =  do
+        -- _ <- many spaces
+        xs <- some digitF'
+        --some digitF' >>= \xs ->
+        if validFloat xs
+           then return (read xs)
+           else empty
 
-
-
-binFloat:: Parser Float
-binFloat = do
-               char '/'
-               n <- pflt
-               return (1/n)
-               <|> multFloat
-
--------------------------------
 flt :: Parser Float
-flt = do char '-'
+flt = do 
+         char '-'
          n <- pflt
          return (-n)
          <|> posflt
@@ -142,16 +72,6 @@ stringFloat :: Parser String
 stringFloat =  do 
         x <- some alphanum
         return x
-
-
-braveExit :: String -> Int -> IO ()
-braveExit str 0 = putStrLn str >> exitWith (ExitSuccess)
-braveExit str n = putStrLn str >> exitWith (ExitFailure n)
-
-
-stripChars :: String -> String -> String
-stripChars = filter . flip notElem
-
 
 
 alphanum :: Parser Char
@@ -167,95 +87,129 @@ daten = do
          return d
 
 
-token :: Parser String
+isSchemeSymbol :: Char -> Bool
+isSchemeSymbol ch = elem ch "!#$%&|*+-/:<=>?@^_~"
+
+isMathSymbol :: Char -> Bool
+isMathSymbol ch = elem ch "+-*/<"
+
+tokenFlt :: Parser SchExpr
+tokenFlt = do
+            _ <- spaces
+            f <- flt
+            return (Float f)
+            <|> empty
+
+concat_qlist :: [String]-> String -> String
+concat_qlist (x:[]) base = x ++ " " ++ base
+concat_qlist (x:xs) base | base == ")" = (concat_qlist xs ((x) ++ base))
+                         | otherwise = (concat_qlist xs ((x) ++ " " ++ base))       
+
+quoted_list :: Parser String
+quoted_list = do
+             _ <- string "("
+             q <- many quotes 
+             _<- string ")"
+             if q == [] then return "()"
+             else return ("(" ++ (concat_qlist (reverse q) ")"))
+
+symbol_quote :: Parser SchExpr
+symbol_quote = do
+               _ <- string "("
+               _ <- string "quote"
+               t <- quoted_list
+               _ <- string ")"
+               return (Quote t) 
+
+
+quote :: Parser SchExpr
+quote = do
+        _ <- string "'"
+        t <- some alphanum <|> quoted_list 
+        return (Quote t)
+        <|> symbol_quote
+
+
+quotes :: Parser String
+quotes = do
+            _ <- spaces
+            t <- some alphanum
+            return (t)
+            <|> empty
+
+
+token :: Parser SchExpr
 token = do
-            t <- many alphanum
-            return t
+            _ <- spaces
+            t <- some alphanum
+            return (Var t)
+            <|> empty
 
+boolean :: Parser SchExpr
+boolean = do
+            b <- string "#t" <|> string "#f"
+            if' (b == "#t") (return (Bool True)) (return (Bool False))                                
 
+--NOT VALID FOR STRINGS WHICH START WITH SPACES! PLEASE SPLIT!
 string :: String -> Parser String
 string []     = return []
-string (x:xs) = do 
+string (x:xs) = do
+                   _ <- many (sat isSpace)
                    _ <- char x
                    _ <- string xs
                    return (x:xs)
 
+-- symbol :: Parser Char
+-- symbol = sat isSchemeSymbol
 
-space :: Parser ()
-space = do many (sat isSpace)
-           return ()
+symb:: Parser SchExpr
+symb = do
+        s <- (sat isMathSymbol)
+        return (Var [s])
 
-tocken :: Parser a -> Parser a
-tocken p = do
-             space
-             v <- p
-             space
-             return v
+
+spaces :: Parser String
+spaces = do 
+           _ <- many (sat isSpace)
+           return ""
+
  
-fromPairs:: Parser String
-fromPairs = do
-        _ <- string "'" <|> string ""
+atleastoneSpace :: Parser Char
+atleastoneSpace = do
+        _  <- some (sat isSpace)
+        return ' '
+        <|> empty
 
-        n <- list
-
-        return ("(" ++ n ++ ")")    
-        <|> return "fromPair did not get a list back" 
-
-list :: Parser String
-list = do
-      _ <- string "("
-
-      elem1 <- element
-      elem2  <- list
-      br2 <- string ")"
-
-      if elem2  == []
-          then return elem1
-      else
-         return (elem1 ++ elem2)
-      <|> element
+dot :: Parser String
+dot = do
+        _ <-atleastoneSpace
+        --return " . " 
+        _ <- char '.' 
+        _ <- char ' '
+        return " . "
+        <|> empty
 
 
-element:: Parser String
-element = do
-      x <- some alphanum <|> pair
-      str <- string " . "
-      y <- list
-      if y == []
-          then return (x)
-      else    
-        return (x ++ "  " ++ y)
-      <|> pair
-
-
-nil :: Parser String
-nil = do
-        _ <- string "("
-        _ <- string ")"
-        return "nil"
-
-pair :: Parser String
-pair = do
-        _ <- string "("
-        x <- some alphanum
-        _ <- string " . "
-        y <- some alphanum
-        _ <- string ")"
-        return ("(" ++ x ++ " . " ++ y ++ ")")
+checkString :: Parser String
+checkString = do
+        _ <- string "Chorowo!"
+        return "Chorowo!"
         <|> return []
 
-        
-quotedString :: Parser String
+
+parseSchExpr :: Parser SchVal
+parseSchExpr = do
+              _ <- string ""
+              return $ AtmString "STRING"  
+
+typing :: Float -> SchExpr
+typing n = (Float n)
+
+
+quotedString :: Parser SchExpr
 quotedString = do
              _ <- char '"'
              quot <- daten
              _ <- char '"' 
-             return quot
+             return (Str quot)
              <|> empty
-
-
-isAtom :: Parser String
-isAtom = do
-         x <- quotedString
-         return x
-         <|> return "tanya"

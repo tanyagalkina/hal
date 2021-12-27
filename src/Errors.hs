@@ -7,10 +7,12 @@ module Errors
   
 ) where
 
+import Lexer
 import System.Console.Haskeline
 import System.Exit
 import Repl
 import Types
+import SchEval
 import Control.Exception
 --import System.Environment (getArgs)
 
@@ -31,13 +33,19 @@ cannotReadFile :: [String] -> Bool
 cannotReadFile _ = False
 
 
-if' :: Bool -> a -> a -> a
-if' True  x _ = x
-if' False _ y = y
+-- mPrint :: [String] -> String -> Ctx -> IO ()
+-- mPrint as ctx = if' (code == 84) (b (sP res) 84) (if' (as == []) (pSL (sP res) >> m as ct flag) (m as ct flag))
+--                 where (code, res, ct) = evalSch s ctx
 
 
+
+b = braveExit
+sP = schPrint
+pSL = putStrLn
+m = manager
 --- ---------[ARGS]   -> CTX
 manager :: [String] -> Ctx -> Bool -> IO ()
+manager ("-i":as) ctx flag = manager as ctx flag
 manager [] ctx True = repl ctx
 manager [] ctx False = exitWith ExitSuccess
 manager (a:as) ctx flag =
@@ -45,10 +53,15 @@ manager (a:as) ctx flag =
           src <- try $ readFile a
           case src of
               --- IF THERE WERE PROBLEMS WITH READING THE FILE
-              Left e -> do
-                          print (e :: IOError)
+              Left e ->  print (e :: IOError)
                           >> exitWith (ExitFailure 84)
               -- GOT THE FILE CONTENT, THEN ...->
-              Right s -> do 
-                let r@(code, res, ct) =  evalLisp s ctx
-                if' (code == 84) (braveExit res 84) (if' (as == []) (print res >> manager as ct flag) (manager as ct flag))      
+
+              Right s -> 
+                if' (code == 84) (b (sP res) 84) (if' (as == []) (pSL (sP res) >> m as ct flag) (m as ct flag))
+                  where (code, res, ct) = evalSch s ctx
+              -- Right s -> do 
+              --   -- let r@(code, res, ct) =  evalLisp s ctx
+              --   let r@(code, res, ct) = evalSch s ctx
+
+              --   if' (code == 84) (braveExit (schPrint res) 84) (if' (as == []) (putStrLn (schPrint res) >> manager as ct flag) (manager as ct flag))      
