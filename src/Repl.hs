@@ -45,8 +45,18 @@ schPrint (Error s) = s
 schPrint (SchBool b) | b == True = "#t"
                      | otherwise = "#f"
                      
-schPrint (Closure _ _ _) = "#<procedure>"                     
 
+
+schPrint (Closure _ _ _) = "#<procedure>"
+schPrint (DottedList a as) = "(" ++ (schPrint $ head a) ++ (sof as)
+      -- where sof | (head as) /= (Quote "()") =  " . " ++ schPrint (head as) ++ ")"
+      --   otherwise ")"
+
+
+
+sof :: SchVal -> String
+sof val | val /= (SchQuote "()") = " . " ++ schPrint val ++ ")"
+        | otherwise = ")"
 
 -- concat_qlist :: [SchExpr]-> String -> String
 -- concat_qlist (x:[]) base = (SchString $ x) ++ base

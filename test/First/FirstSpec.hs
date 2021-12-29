@@ -37,6 +37,26 @@ spec = do
   describe "atleastonespace" $ do    
     it "parsing at least one space fail" $ do
       parse atleastoneSpace "mamapapa" `shouldBe` []
+
+  describe "TOKEN" $ do    
+    it "parsing at least one space fail" $ do
+      parse token "eq?    " `shouldBe` [(Var "eq", "    ")]
+    
+
+
+  describe "EQ" $ do    
+    it "parsing symbol eq?" $ do
+      parse eq "eq? " `shouldBe` [("eq?", " ")]
+
+  describe "LIST1" $ do    
+    it "parsing symbol eq?" $ do
+      parse list "(+  8 9)" `shouldBe` [(Var "+", "  ")]    
+    
+
+  describe "symb" $ do    
+    it "parsing symbol eq?" $ do
+      parse symb "*  " `shouldBe` [(Var "*", "  ")]    
+      
     
 
   -- describe "checking dottedPair" $ do    

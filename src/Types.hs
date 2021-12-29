@@ -13,13 +13,19 @@ data Defn = SchVal Ident SchExpr
 
 data SchExpr = Number Int
             | Str String
-            | Float Float    
+            | Float Double    
             | Plus [SchExpr] 
             | Minus [SchExpr]
+            | Mult [SchExpr]
+            | Div [SchExpr]
+            | Mod [SchExpr]
+            | Less [SchExpr]
             | Var Ident
+            | Cons [SchExpr]
+            | ArgLi [SchExpr]
             | Li [SchExpr] 
             | If SchExpr SchExpr SchExpr
-            | Equals SchExpr SchExpr
+            | Equals [SchExpr]
             | Let Defn SchExpr
             | Def Defn 
             | Quote Ident 
@@ -36,8 +42,9 @@ data SchVal = Atom Integer
              | List [SchVal]
              | SchQList [SchVal]
              | DottedList [SchVal] SchVal
+             | DottedPair SchVal SchVal
              | SchNumber Int
-             | SchFloat Float 
+             | SchFloat Double 
              | SchString String
              | SchChar Char
              | SchBool Bool

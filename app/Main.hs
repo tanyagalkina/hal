@@ -11,7 +11,19 @@ funcF:: SchVal
 funcF = SchString "HAHAHA!"
 
 context :: Ctx
-context = [("+", Closure ["x"] (Plus [Var "x"]) context), ("name", (SchString "Mama")), ("Three", (SchFloat 3.0)), ("fun", funcF)]
+context = [
+            ("div", Closure ["x", "y"] (Div [Var "x", Var "y"]) context)
+           ,("mod", Closure ["x", "y"] (Mod [Var "x", Var "y"]) context)
+           ,("<", Closure ["x", "y"] (Less [Var "x", Var "y"]) context)
+           ,("+", Closure ["x", "y"] (Plus [Var "x", Var "y"]) context)
+           ,("-", Closure ["x", "y"] (Minus [Var "x", Var "y"]) context)
+           ,("*", Closure ["x", "y"] (Mult [Var "x", Var "y"]) context)
+           ,("eq?", Closure ["x", "y"] (Equals [Var "x", Var "y"]) context)
+           ,("cons", Closure ["x", "y"] (Cons [Var "x", Var "y"]) context)
+           ,("name", (SchString "Mama"))
+           ,("Three", (SchFloat 3.0))
+           ,("fun", funcF)
+          ]
 
 main :: IO ()
 main = getArgs >>= \argv -> 

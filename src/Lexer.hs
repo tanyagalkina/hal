@@ -24,7 +24,6 @@ isFloatDigit c        = (c == '.' ||
 notBrace :: Char -> Bool
 notBrace c = (c /= ')')
 
-
 notQuote :: Char -> Bool
 notQuote c = (c /= '"')
 
@@ -42,7 +41,7 @@ validFloat xs | len == 1 || len == 0 = True
                   where len =  (length $ filter (== '.') xs)
 
 
-posflt :: Parser Float
+posflt :: Parser Double
 posflt = do
             -- _ <- many spaces 
             char '+'
@@ -51,7 +50,7 @@ posflt = do
             <|> pflt
 
 
-pflt :: Parser Float
+pflt :: Parser Double
 pflt =  do
         -- _ <- many spaces
         xs <- some digitF'
@@ -60,7 +59,7 @@ pflt =  do
            then return (read xs)
            else empty
 
-flt :: Parser Float
+flt :: Parser Double
 flt = do 
          char '-'
          n <- pflt
@@ -77,9 +76,11 @@ stringFloat =  do
 alphanum :: Parser Char
 alphanum = sat isAlphaNum
 
+sch :: Parser Char
+sch = sat isSchemeSymbol <|> sat isAlphaNum
 
 dat :: Parser Char
-dat = sat isAlphaNum
+dat = sat isAlphaNum 
 
 daten :: Parser String
 daten = do
@@ -129,21 +130,30 @@ quote = do
         return (Quote t)
         <|> symbol_quote
 
-
 quotes :: Parser String
 quotes = do
             _ <- spaces
-            t <- some alphanum
+            t <- some sch
             return (t)
-            <|> empty
-
-
+            
 token :: Parser SchExpr
 token = do
             _ <- spaces
             t <- some alphanum
             return (Var t)
-            <|> empty
+            
+eq:: Parser SchExpr
+eq = do
+      _ <- char 'e'
+      _ <- char 'q'
+      _ <- char '?'
+      return (Var "eq?")
+
+atm:: Parser SchExpr
+atm = do
+      at <- string "atom"
+      qq <- char '?'
+      return (Var "atom?")
 
 boolean :: Parser SchExpr
 boolean = do
@@ -153,19 +163,23 @@ boolean = do
 --NOT VALID FOR STRINGS WHICH START WITH SPACES! PLEASE SPLIT!
 string :: String -> Parser String
 string []     = return []
-string (x:xs) = do
-                   _ <- many (sat isSpace)
-                   _ <- char x
-                   _ <- string xs
-                   return (x:xs)
+string s@(x:xs) = do
+                       
+                            _  <- many (sat isSpace)
+                            _   <- char x
+                            _ <- string xs
+                            return (x:xs)
 
 -- symbol :: Parser Char
 -- symbol = sat isSchemeSymbol
 
+
+
 symb:: Parser SchExpr
 symb = do
-        s <- (sat isMathSymbol)
+        s <- (sat isMathSymbol) 
         return (Var [s])
+        -- <|> eq <|> atm 
 
 
 spaces :: Parser String
@@ -202,14 +216,15 @@ parseSchExpr = do
               _ <- string ""
               return $ AtmString "STRING"  
 
-typing :: Float -> SchExpr
-typing n = (Float n)
+-- typing :: Float -> SchExpr
+-- typing n = (Float n)
 
 
 quotedString :: Parser SchExpr
 quotedString = do
+             _ <- spaces
              _ <- char '"'
              quot <- daten
              _ <- char '"' 
              return (Str quot)
-             <|> empty
+             
