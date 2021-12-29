@@ -48,7 +48,6 @@ multiply base (x:xs) ctx = let (SchFloat n1) = eval x ctx in
                                   multiply (n1 * n2) xs ctx
 
 
-
 substraction :: [Double] -> [SchExpr] -> Ctx -> SchVal
 substraction []   (x:[]) ctx = let (SchFloat n ) = eval x ctx in
                                     SchFloat (0 - n)
@@ -77,6 +76,14 @@ car :: [SchExpr] -> Ctx -> SchVal
 car (x:xs) ctx = case (eval x ctx)  of
                  (DottedPair a b) -> a
                  (SchQList q)  -> (SchQList [drop 1 $ head q])
+
+isAtom :: [SchExpr] -> Ctx -> SchVal
+isAtom e ctx = case (eval (head e) ctx) of 
+               (DottedPair a b) -> SchBool False
+               (SchQList []) -> SchBool True
+               (SchQList l) -> SchBool False
+               _ -> SchBool True
+                              
 
 find :: Ctx -> Ident -> SchVal 
 find env i | found == [] = (Error $ "Exception: variable " ++ i ++ " is not bound")
@@ -127,6 +134,7 @@ eval (ArgLi al)        ctx      = (List $ trans [] al ctx)
 eval (Li l)            ctx      = eval (Apply (head l)  (tail l)) ctx
 -- eval (QList q)         ctx      =  SchQList q 
 eval (Equals (a:b))    ctx      = SchBool $ (eval a ctx) == (eval (head b) ctx)
+eval (IsAtom e)        ctx      = isAtom e ctx 
 eval (If g e1 e2)      ctx      = case eval g ctx of 
                                   (SchBool True) -> eval e1 ctx
                                   (SchBool False) -> eval e2 ctx

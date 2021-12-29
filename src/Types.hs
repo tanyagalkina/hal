@@ -19,6 +19,7 @@ data SchExpr = Number Int
             | Mult [SchExpr]
             | Div [SchExpr]
             | Mod [SchExpr]
+            | IsAtom [SchExpr]
             | Less [SchExpr]
             | Var Ident
             | Cons [SchExpr]
