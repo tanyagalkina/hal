@@ -106,28 +106,50 @@ concat_qlist (x:[]) base = x ++ " " ++ base
 concat_qlist (x:xs) base | base == ")" = (concat_qlist xs ((x) ++ base))
                          | otherwise = (concat_qlist xs ((x) ++ " " ++ base))       
 
-quoted_list :: Parser String
+
+-- CHANGE TO [STRING]
+quoted_list :: Parser [String]
 quoted_list = do
              _ <- string "("
              q <- many quotes 
              _<- string ")"
-             if q == [] then return "()"
-             else return ("(" ++ (concat_qlist (reverse q) ")"))
+             return q
+             --if q == [] then return ["()"]
+             --else return ("(" ++ (concat_qlist (reverse q) ")"))
 
 symbol_quote :: Parser SchExpr
 symbol_quote = do
                _ <- string "("
                _ <- string "quote"
-               t <- quoted_list
+               _ <- spaces
+               t <- some alphanum
                _ <- string ")"
                return (Quote t) 
+               <|> symbol_QList
 
+symbol_QList :: Parser SchExpr
+symbol_QList = do 
+        _ <- string "("
+        _ <- string "quote"
+        _ <- spaces
+        t <- quoted_list
+        _ <- string ")"
+        return (QList t)
+
+
+
+qList :: Parser SchExpr
+qList = do
+        _ <- string "'"
+        t <- quoted_list
+        return (QList t)
 
 quote :: Parser SchExpr
 quote = do
         _ <- string "'"
-        t <- some alphanum <|> quoted_list 
+        t <- some alphanum
         return (Quote t)
+        <|> qList 
         <|> symbol_quote
 
 quotes :: Parser String
@@ -170,16 +192,11 @@ string s@(x:xs) = do
                             _ <- string xs
                             return (x:xs)
 
--- symbol :: Parser Char
--- symbol = sat isSchemeSymbol
-
-
 
 symb:: Parser SchExpr
 symb = do
         s <- (sat isMathSymbol) 
         return (Var [s])
-        -- <|> eq <|> atm 
 
 
 spaces :: Parser String

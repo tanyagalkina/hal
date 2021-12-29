@@ -23,7 +23,9 @@ data SchExpr = Number Int
             | Var Ident
             | Cons [SchExpr]
             | ArgLi [SchExpr]
+            | DPair SchExpr SchExpr
             | Li [SchExpr] 
+            | Empty () 
             | If SchExpr SchExpr SchExpr
             | Equals [SchExpr]
             | Let Defn SchExpr
@@ -33,17 +35,26 @@ data SchExpr = Number Int
             | Apply SchExpr [SchExpr]
             | Bool Bool
             | Err String
-            | QList [SchExpr]
+            | Car [SchExpr]
+            | Cdr [SchExpr]
+            | QList [Ident]
+            | Head SchExpr
             deriving (Show, Eq)
 
 
 data SchVal = Atom Integer
-             | AtmString String           
+             | AtmString String
+             | Schlist [SchVal]            
              | List [SchVal]
-             | SchQList [SchVal]
-             | DottedList [SchVal] SchVal
+             | Carr SchVal
+             | Cdrr SchVal
+             | SchHead SchVal
+             | SchQList [String]
+             | DottedList SchVal
              | DottedPair SchVal SchVal
+             | Unbraced SchVal
              | SchNumber Int
+             | SchEmpty ()
              | SchFloat Double 
              | SchString String
              | SchChar Char

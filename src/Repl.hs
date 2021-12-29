@@ -1,9 +1,7 @@
 module Repl
 ( repl
-  ,justTest
-  -- ,evalLispExpression
-  -- ,evalLisp
-  ,schPrint 
+  ,schPrint
+  ,evalSch 
 ) where
 
 import Debug.Trace
@@ -13,22 +11,16 @@ import Types
 import SchEval
 import Grammer
 
-justTest :: Int -> [Int]
-justTest n = [n, n]
+direct_env :: SchVal -> Ctx ->(Int, SchVal, Ctx)
+direct_env (Env i) old = (0, SchString (fst $ head i), i)
+direct_env n      old  = (0, n, old)
 
-
--- evalLisp :: String -> Ctx -> (Int, String, Ctx)
--- evalLisp input ctx | output == [] = (84, "something went wrong!", ctx)
---                    --  snd (head output) /= "" = (84, "not complete, left::" ++ snd (head output) ++ "we got::"  ++ fst (head output), ctx)
---                    | snd (head output) /= "" = (84, "(" ++ snd (head output) ++ ")", ctx) 
---                    | True = (0, (fst (head output)), ctx)
---                           --TRACING CONTEXT EXAMPLE
---                           where output = traceShow ctx parse fromPairs input
---                           --where output = parse fromPairs input
-                                 
--- evalLispExpression :: String -> String -> (String, String)
--- --evalLispExpression input ctx  = traceShow ctx fst (head (parse fromPairs input))
--- evalLispExpression input ctx  = traceShow ctx ((fst (head (parse fromPairs input))), ctx ++ "a")
+evalSch :: String -> Ctx -> (Int, SchVal, Ctx)
+evalSch input  ctx | output == [] =  (84, (SchString "something went wrong"), ctx)
+                   | snd (head output) /= "" = (84, (SchString "Did Not Parse Everything"), ctx)
+                   | True = (direct_env (eval (fst $ head output) ctx) ctx)
+                        -- where output = parse scheme input
+                          where output =  parse atom input
 
 
 isInt :: (Integral a, RealFrac b) => b -> a -> Bool
@@ -41,26 +33,44 @@ schPrint (SchFloat i) | isInt i 5 = show (round i)
                       | otherwise = show i  
 schPrint (SchString s) = show s
 schPrint (SchQuote q) = q
+schPrint (SchQList []) = "()"
+schPrint (SchQList ( q: []))  = q ++ ")" 
+schPrint (SchQList (q:l))  =  q ++ " " ++schPrint (SchQList l)
 schPrint (Error s) = s
 schPrint (SchBool b) | b == True = "#t"
                      | otherwise = "#f"
                      
-
-
 schPrint (Closure _ _ _) = "#<procedure>"
-schPrint (DottedList a as) = "(" ++ (schPrint $ head a) ++ (sof as)
-      -- where sof | (head as) /= (Quote "()") =  " . " ++ schPrint (head as) ++ ")"
-      --   otherwise ")"
+schPrint (Carr e) = schPrint e 
+-- |isPair e = schPrint e
+-- --                  | otherwise = 
+schPrint (DottedList list) = "(" ++ schPrint list
+schPrint (Cdrr e) = schPrint e
 
+schPrint (Unbraced (DottedPair a b)) | isPair b = schPrint a ++ " " ++ schPrint (Unbraced b)
+                                     | (b == (Cdrr(SchQList []))) = schPrint (Unbraced a)
+                                     | otherwise = schPrint a ++ " . " ++ schPrint b 
 
+schPrint (DottedPair a b)
+--  isPair b = "(" ++ schPrint a ++ build b
+                  | isPair b = schPrint a ++ " " ++ schPrint (Unbraced b)
+                  | b == (Cdrr(SchQList [])) = schPrint a ++ ")"
+                  | otherwise = "(" ++ schPrint a ++ " . " ++ schPrint b++ ")" 
 
-sof :: SchVal -> String
-sof val | val /= (SchQuote "()") = " . " ++ schPrint val ++ ")"
-        | otherwise = ")"
+schPrint (Unbraced val) = schPrint val
+  
 
--- concat_qlist :: [SchExpr]-> String -> String
--- concat_qlist (x:[]) base = (SchString $ x) ++ base
--- concat_qlist (x:xs) base = " " ++ (concat_qlist xs ((show x) ++ base))
+--- THI SI ONLY NEED FOR REPRESENTATION! THE STRCUCTURE CAR CDR IS CORRECT!!  
+-- build :: SchVal -> String
+-- build (DottedPair a b) = schPrint a ++ schPrint b   
+
+isPair :: SchVal -> Bool
+--isPair pair = traceShow pair True
+isPair (Carr (DottedPair a b)) = True
+isPair (Cdrr (DottedPair a b)) = True
+isPair (Unbraced (Cdrr (DottedPair a b))) = True
+isPair (Unbraced (Carr (DottedPair a b))) = True
+isPair _ = False
 
 
 repl:: Ctx -> IO ()
@@ -72,20 +82,9 @@ repl ctx = runInputT defaultSettings (loop ctx)
                 minput <- getInputLine "% "
                 case minput of
                     Nothing -> outputStrLn "" >> return ()
-                    -- Nothing -> do
-                    --           outputStrLn ""
-                    --           return ()
                     Just "quit" -> return ()
                     --Just input -> do outputStrLn $ "Input was: " ++ input
                     Just input ->
                                    (outputStrLn $ schPrint output) >>
                                    loop context
                                    where (code, output, context) = evalSch input ctx
-
-                       --let (code, output, context) = evalSch input ctx >>
-
-                    -- Just input -> do
-                    --             let (code, output, context) = evalSch input ctx
-                    --             outputStrLn $ schPrint output 
-                    --             loop context
-                                        

@@ -14,10 +14,7 @@ import Repl
 import Types
 import SchEval
 import Control.Exception
---import System.Environment (getArgs)
 
-
---else braveExit "share something if u dont mind ..." 84  //EXAMPLE
 braveExit :: String -> Int -> IO ()
 braveExit str 0 = putStrLn str >> exitWith (ExitSuccess)
 braveExit str n = putStrLn str >> exitWith (ExitFailure n)
