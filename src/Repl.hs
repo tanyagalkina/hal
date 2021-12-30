@@ -12,7 +12,7 @@ import SchEval
 import Grammer
 
 direct_env :: SchVal -> Ctx ->(Int, SchVal, Ctx)
-direct_env (Env i) old = (0, SchString (fst $ head i), i)
+direct_env (Env i) old = (0, SchQuote (fst $ head i), i)
 direct_env n      old  = (0, n, old)
 
 evalSch :: String -> Ctx -> (Int, SchVal, Ctx)
