@@ -51,7 +51,7 @@ data SchVal = Atom Integer
              | Cdrr SchVal
              | SchHead SchVal
              | SchQList [String]
-             | DottedList SchVal
+             | DottedList [SchVal]
              | DottedPair SchVal SchVal
              | Unbraced SchVal
              | SchNumber Int

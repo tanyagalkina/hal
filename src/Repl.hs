@@ -35,7 +35,7 @@ schPrint (SchString s) = show s
 schPrint (SchQuote q) = q
 schPrint (SchQList []) = "()"
 schPrint (SchQList ( q: []))  = q ++ ")" 
-schPrint (SchQList (q:l))  =  q ++ " " ++schPrint (SchQList l)
+schPrint (SchQList (q:l))  =  q ++ " " ++ schPrint (SchQList l)
 schPrint (Error s) = s
 schPrint (SchBool b) | b == True = "#t"
                      | otherwise = "#f"
@@ -44,21 +44,40 @@ schPrint (Closure _ _ _) = "#<procedure>"
 schPrint (Carr e) = schPrint e 
 -- |isPair e = schPrint e
 -- --                  | otherwise = 
-schPrint (DottedList list) = "(" ++ schPrint list
+schPrint (DottedList l) = "(" ++ concatDotted "" l ++ ")"
 schPrint (Cdrr e) = schPrint e
 
-schPrint (Unbraced (DottedPair a b)) | isPair b = schPrint a ++ " " ++ schPrint (Unbraced b)
-                                     | (b == (Cdrr(SchQList []))) = schPrint (Unbraced a)
-                                     | otherwise = schPrint a ++ " . " ++ schPrint b 
+-- schPrint (Unbraced (DottedPair a b)) | isPair b = schPrint (Unbraced a) ++ " " ++ schPrint (Unbraced b)
+--                                      | (b == (Cdrr(SchQList []))) = schPrint (Unbraced a)
+--                                      | otherwise = schPrint (Unbraced a) ++ " . " ++ schPrint (Unbraced b) 
 
+
+schPrint (Unbraced (DottedPair a b)) | isPair b = schPrint (Unbraced a) ++ " " ++ schPrint (Unbraced b)
+                                     | b == (Cdrr(SchQList [])) = schPrint (Unbraced a) 
+                                     | otherwise = schPrint (Unbraced a) ++ " . " ++ schPrint (Unbraced b)
+ 
 schPrint (DottedPair a b)
+                  | isPair b = schPrint (DottedList [a, b])
 --  isPair b = "(" ++ schPrint a ++ build b
-                  | isPair b = schPrint a ++ " " ++ schPrint (Unbraced b)
-                  | b == (Cdrr(SchQList [])) = schPrint a ++ ")"
+                  --  isPair b = schPrint a ++ " " ++ schPrint (Unbraced b)
+                  | b == (Cdrr(SchQList [])) = traceShow "HERE" "(" ++ schPrint a ++ ")"
                   | otherwise = "(" ++ schPrint a ++ " . " ++ schPrint b++ ")" 
 
 schPrint (Unbraced val) = schPrint val
   
+
+specialUnbracedPrint:: SchVal -> String
+specialUnbracedPrint (Carr (v)) = schPrint (v)
+specialUnbracedPrint (Cdrr (DottedPair v1 v2))| v2 == (Cdrr(SchQList [])) = schPrint v1
+                                              | isPair v2 == False = schPrint v1 ++ " . " ++ schPrint v2
+                                              | otherwise = schPrint v1 ++ " " ++ specialUnbracedPrint (v2)
+specialUnbracedPrint _ = ""  
+
+concatDotted :: String -> [SchVal] -> String
+concatDotted base (l:[]) | base == "" = base ++ specialUnbracedPrint l
+                         | otherwise = base ++ " " ++ specialUnbracedPrint l
+concatDotted base (l:lx) = concatDotted (base ++ specialUnbracedPrint l) (lx)
+-- "WE ARE THE LIST VALUES"
 
 --- THI SI ONLY NEED FOR REPRESENTATION! THE STRCUCTURE CAR CDR IS CORRECT!!  
 -- build :: SchVal -> String
