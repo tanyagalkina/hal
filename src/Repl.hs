@@ -60,7 +60,7 @@ schPrint (DottedPair a b)
                   | isPair b = schPrint (DottedList [a, b])
 --  isPair b = "(" ++ schPrint a ++ build b
                   --  isPair b = schPrint a ++ " " ++ schPrint (Unbraced b)
-                  | b == (Cdrr(SchQList [])) = traceShow "HERE" "(" ++ schPrint a ++ ")"
+                  | b == (Cdrr(SchQList [])) = "(" ++ schPrint a ++ ")"
                   | otherwise = "(" ++ schPrint a ++ " . " ++ schPrint b++ ")" 
 
 schPrint (Unbraced val) = schPrint val
