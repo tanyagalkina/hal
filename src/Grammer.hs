@@ -26,14 +26,30 @@ defn = do
         return (SchVal nam val)
 
 
-define :: Parser SchExpr
-define = do
+defineVal :: Parser SchExpr
+defineVal = do
         _ <- string "("
         _ <- string "define"
         _ <- spaces
         d <- defn
         _ <- string ")"
         return (Def d)
+
+define :: Parser SchExpr
+define = do
+        _ <- string "("
+        _ <- string "define"
+        _ <- spaces
+        _ <- string "("
+        _ <- spaces 
+        name <- some alphanum
+        _ <- spaces
+        ins  <-  some var
+        _ <- string ")" 
+        ex <- list
+        _ <- string ")"
+        return (Def (Rec name (Lam ins ex))) 
+        <|> defineVal
 
 
 list :: Parser SchExpr

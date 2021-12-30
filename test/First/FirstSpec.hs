@@ -5,19 +5,14 @@ import Lexer
 import Types
 import SchEval
 import Test.Hspec
-import Repl (
-    justTest
-    ,repl
-    )
+import Repl
+import Grammer
 
 evalString = "this is not very simply string"
 
 
 spec :: Spec
 spec = do
-  describe "just first test using Hspec!" $ do
-    it "generates a list from a single Int" $ do
-      justTest 8 `shouldBe` [8, 8]
   describe "parse spaces" $ do    
     it "should parse spaces before the token" $ do
       parse spaces "       Tanya" `shouldBe` [("", "Tanya")]
@@ -43,10 +38,9 @@ spec = do
       parse token "eq?    " `shouldBe` [(Var "eq", "    ")]
     
 
-
   describe "EQ" $ do    
     it "parsing symbol eq?" $ do
-      parse eq "eq? " `shouldBe` [("eq?", " ")]
+      parse eq "eq? " `shouldBe` [(Var "eq?", " ")]
 
   describe "LIST1" $ do    
     it "parsing symbol eq?" $ do
@@ -57,23 +51,6 @@ spec = do
     it "parsing symbol eq?" $ do
       parse symb "*  " `shouldBe` [(Var "*", "  ")]    
       
-    
-
-  -- describe "checking dottedPair" $ do    
-  --   it "recognizing that there is something with ' . ' in between" $ do
-  --     parse dottedPair "(mama . papa)" `shouldBe` [("(mama . papa)", "")]
-
-  -- describe "checking some alphanum" $ do    
-  --   it "what does it exactly do?" $ do
-  --     parse token "      mama123 " `shouldBe` [("mama123", " ")]         
-       
-  -- describe "checking dot separately" $ do    
-  --   it "parsing dot in the pair" $ do
-  --    parse dot "      . " `shouldBe` [(" . ", "")]
-
-  -- describe "looking for float" $ do    
-  --   it "should take all th numbers" $ do
-  --    parse tokenFlt "     8 9 10" `shouldBe` [(8, " 9 10")]
 
   describe "parsing to expr types" $ do    
     it "returns a SchExpr :: Float" $ do

@@ -163,6 +163,12 @@ token = do
             _ <- spaces
             t <- some alphanum
             return (Var t)
+
+var :: Parser String
+var = do
+            _ <- spaces
+            t <- some alphanum
+            return (t)            
             
 eq:: Parser SchExpr
 eq = do
