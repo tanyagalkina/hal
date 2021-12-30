@@ -1,11 +1,5 @@
 module Errors
-( 
-  manager
-  ,braveExit
-  ,zeroto
-  , if'
-  
-) where
+where
 
 import Lexer
 import System.Console.Haskeline
@@ -14,6 +8,7 @@ import Repl
 import Types
 import SchEval
 import Control.Exception
+import Debug.Trace
 
 braveExit :: String -> Int -> IO ()
 braveExit str 0 = putStrLn str >> exitWith (ExitSuccess)
@@ -34,6 +29,11 @@ cannotReadFile _ = False
 -- mPrint as ctx = if' (code == 84) (b (sP res) 84) (if' (as == []) (pSL (sP res) >> m as ct flag) (m as ct flag))
 --                 where (code, res, ct) = evalSch s ctx
 
+
+-- stripChars " \t" 
+
+-- stripChars :: String -> String -> String
+-- stripChars = filter . flip notElem
 
 
 b = braveExit
@@ -56,7 +56,8 @@ manager (a:as) ctx flag =
 
               Right s -> 
                 if' (code == 84) (b (sP res) 84) (if' (as == []) (pSL (sP res) >> m as ct flag) (m as ct flag))
-                  where (code, res, ct) = evalSch s ctx
+                where (code, res, ct) = evalSch (stripChars "\t\n\r" $ s) ctx
+                -- where (code, res, ct) = evalSch s ctx
               -- Right s -> do 
               --   -- let r@(code, res, ct) =  evalLisp s ctx
               --   let r@(code, res, ct) = evalSch s ctx

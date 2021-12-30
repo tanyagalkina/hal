@@ -1,8 +1,5 @@
 module Repl
-( repl
-  ,schPrint
-  ,evalSch 
-) where
+where
 
 import Debug.Trace
 import System.Console.Haskeline
@@ -25,6 +22,11 @@ evalSch input  ctx | output == [] =  (84, (SchString "something went wrong"), ct
 
 isInt :: (Integral a, RealFrac b) => b -> a -> Bool
 isInt x n = (round $ 10^(fromIntegral n)*(x-(fromIntegral $ round x)))==0
+
+
+
+stripChars :: String -> String -> String
+stripChars = filter . flip notElem
 
 
 schPrint :: SchVal -> String
@@ -52,9 +54,9 @@ schPrint (Cdrr e) = schPrint e
 --                                      | otherwise = schPrint (Unbraced a) ++ " . " ++ schPrint (Unbraced b) 
 
 
-schPrint (Unbraced (DottedPair a b)) | isPair b = schPrint (Unbraced a) ++ " " ++ schPrint (Unbraced b)
-                                     | b == (Cdrr(SchQList [])) = schPrint (Unbraced a) 
-                                     | otherwise = schPrint (Unbraced a) ++ " . " ++ schPrint (Unbraced b)
+-- schPrint (Unbraced (DottedPair a b)) | isPair b = schPrint (Unbraced a) ++ " " ++ schPrint (Unbraced b)
+--                                      | b == (Cdrr(SchQList [])) = schPrint (Unbraced a) 
+--                                      | otherwise = schPrint (Unbraced a) ++ " . " ++ schPrint (Unbraced b)
  
 schPrint (DottedPair a b)
                   | isPair b = schPrint (DottedList [a, b])
@@ -67,24 +69,21 @@ schPrint (Unbraced val) = schPrint val
   
 
 specialUnbracedPrint:: SchVal -> String
-specialUnbracedPrint (Carr (v)) = schPrint (v)
-specialUnbracedPrint (Cdrr (DottedPair v1 v2))| v2 == (Cdrr(SchQList [])) = schPrint v1
-                                              | isPair v2 == False = schPrint v1 ++ " . " ++ schPrint v2
-                                              | otherwise = schPrint v1 ++ " " ++ specialUnbracedPrint (v2)
-specialUnbracedPrint _ = ""  
+specialUnbracedPrint (Carr (v))                 = schPrint (v)
+specialUnbracedPrint (Cdrr (DottedPair v1 v2))
+                    | v2 == (Cdrr(SchQList [])) = schPrint v1
+                    | isPair v2 == False        = schPrint v1 ++ " . " ++ schPrint v2
+                    | otherwise                 = schPrint v1 ++ " " ++ specialUnbracedPrint (v2)
+specialUnbracedPrint _                          = ""  
+
 
 concatDotted :: String -> [SchVal] -> String
 concatDotted base (l:[]) | base == "" = base ++ specialUnbracedPrint l
                          | otherwise = base ++ " " ++ specialUnbracedPrint l
 concatDotted base (l:lx) = concatDotted (base ++ specialUnbracedPrint l) (lx)
--- "WE ARE THE LIST VALUES"
 
---- THI SI ONLY NEED FOR REPRESENTATION! THE STRCUCTURE CAR CDR IS CORRECT!!  
--- build :: SchVal -> String
--- build (DottedPair a b) = schPrint a ++ schPrint b   
 
 isPair :: SchVal -> Bool
---isPair pair = traceShow pair True
 isPair (Carr (DottedPair a b)) = True
 isPair (Cdrr (DottedPair a b)) = True
 isPair (Unbraced (Cdrr (DottedPair a b))) = True
@@ -93,7 +92,9 @@ isPair _ = False
 
 
 repl:: Ctx -> IO ()
-repl ctx = putStrLn "Chez Scheme Version 9.5.5\nCopyright 1984-2020 Cisco Systems, Inc.\n" >> runInputT defaultSettings (loop ctx)
+repl ctx = 
+  putStrLn "Chez Scheme Version 9.5.5\nCopyright 1984-2020 Cisco Systems, Inc.\n"
+   >> runInputT defaultSettings (loop ctx)
    where
        loop:: Ctx -> InputT IO () 
        loop ctx = do
@@ -106,4 +107,4 @@ repl ctx = putStrLn "Chez Scheme Version 9.5.5\nCopyright 1984-2020 Cisco System
                     Just input ->
                                    (outputStrLn $ schPrint output) >>
                                    loop context
-                                   where (code, output, context) = evalSch input ctx
+                                   where (code, output, context) = evalSch (stripChars "\t\n\r" $ input) ctx
