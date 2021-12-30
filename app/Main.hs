@@ -23,6 +23,10 @@ context = [
            ,("cons", Closure ["x", "y"] (Cons [Var "x", Var "y"]) context)
            ,("car", Closure ["x"] (Car [Var "x"]) context)
            ,("cdr", Closure ["x"] (Cdr [Var "x"]) context)
+          --  ,("define", Closure ["x"] (Def [Def]) context)
+
+          --  ,("lambda", Closure ["x", "y"] (Lam [DottedPair "x", Var "y"]) context)
+
            ,("name", (SchString "Mama"))
            ,("Three", (SchFloat 3.0))
            ,("fun", funcF)

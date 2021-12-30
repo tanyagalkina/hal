@@ -66,22 +66,7 @@ data SchVal = Atom Integer
              | Closure [Ident] SchExpr Ctx
       deriving (Show, Eq)       
 
-
--- data Ctx = Ctx { vars :: [(String, SchVal)] , funcs:: [String] } 
 type Ctx = [(Ident, SchVal)]
--- mama = Ctx [][]
-
---initCtx::Ctx
---initCtx = Ctx [("Nil", (SchNumber 0)), ("Three", (Schfloat 3.0))]
-
--- initCtx :: Ctx
--- initCtx = Ctx [("Nil", (SchNumber 0)), ("Three", (SchFloat 3.0)), ("Name", (SchString "Tanya" ))]["Mama"]
-
--- instance Show Ctx where
---    show c = show (head c)
-      
-      --"Context {Vars = " ++ show (vars c) ++ ", funcs = " ++ show (funcs c) ++ "}"
-
 
 if' :: Bool -> a -> a -> a
 if' True  x _ = x
@@ -132,6 +117,3 @@ instance Alternative Parser where
    p <|> q = P (\input -> case parse p input of
                            []        -> parse q input
                            [(v,out)] -> [(v,out)])
-
-
-

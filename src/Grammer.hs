@@ -15,7 +15,26 @@ atom = do
                 <|> symb
                 <|> boolean
                 <|> quote
+                <|> define
                 <|> list
+
+defn :: Parser Defn
+defn = do
+        _ <- spaces
+        nam <- some alphanum
+        val <- atom
+        return (SchVal nam val)
+
+
+define :: Parser SchExpr
+define = do
+        _ <- string "("
+        _ <- string "define"
+        _ <- spaces
+        d <- defn
+        _ <- string ")"
+        return (Def d)
+
 
 list :: Parser SchExpr
 list = do
