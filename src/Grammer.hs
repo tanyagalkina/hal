@@ -15,6 +15,7 @@ atom = do
                 <|> symb
                 <|> boolean
                 <|> quote
+                <|> lambda
                 <|> define
                 <|> list
 
@@ -51,6 +52,20 @@ define = do
         return (Def (Rec name (Lam ins ex))) 
         <|> defineVal
 
+
+lambda :: Parser SchExpr
+lambda = do
+        _ <- string "("
+        _ <- string "lambda"
+        _ <- spaces
+        _ <- string "("
+        _ <- spaces
+        ins  <-  some var
+        _ <- string ")" 
+        ex <- list
+        _ <- string ")"
+
+        return (Lam ins ex)
 
 list :: Parser SchExpr
 list = do
