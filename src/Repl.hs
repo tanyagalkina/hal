@@ -93,12 +93,12 @@ isPair _ = False
 
 
 repl:: Ctx -> IO ()
-repl ctx = runInputT defaultSettings (loop ctx)
+repl ctx = putStrLn "Chez Scheme Version 9.5.5\nCopyright 1984-2020 Cisco Systems, Inc.\n" >> runInputT defaultSettings (loop ctx)
    where
        loop:: Ctx -> InputT IO () 
        loop ctx = do
-                --outputStrLn ctx === FOR CHECKING THE CONTEXT!!
-                minput <- getInputLine "% "
+                -- outputStrLn "THIS LINE IS PRINTED BEFORE EACH OUTPUT"
+                minput <- getInputLine "> "
                 case minput of
                     Nothing -> outputStrLn "" >> return ()
                     Just "quit" -> return ()
