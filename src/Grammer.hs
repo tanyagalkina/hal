@@ -8,17 +8,26 @@ atom :: Parser SchExpr
 atom = do
                 n <- tokenFlt
                 return n
+                <|> quote
                 <|> quotedString
                 <|> eq
                 <|> atm
                 <|> token
                 <|> symb
                 <|> boolean
-                <|> quote
                 <|> lambda
                 <|> define
                 <|> lett
                 <|> list
+
+quoteAtom :: Parser SchExpr
+quoteAtom = do 
+        n <- tokenFlt
+        return n
+        <|> quotedString
+        <|> token
+        <|> quoteSymb
+
 
 defn :: Parser Defn
 defn = do
@@ -92,7 +101,7 @@ list :: Parser SchExpr
 list = do
        _ <- string "("
        _ <- spaces
-       ex <- many atom
+       ex <- many atom 
        _ <- string ")"
        return (listMan ex)
 
@@ -100,6 +109,7 @@ listMan :: [SchExpr] -> SchExpr
 listMan (Var "+": xs) = (Plus xs)
 listMan (Var "-":xs) = (Minus xs)
 listMan (Var "*": xs) = (Mult xs)
+-- listMan (Var "quote":xs) = (QList xs)
 -- listMan (Var "cons":xs) = (Li $ processFirst xs)
 listMan []   = Err "Invalid Sytax"
 listMan list = (Li list)             
@@ -107,3 +117,84 @@ listMan list = (Li list)
 
 processFirst :: [SchExpr] -> [SchExpr]
 processFirst (x:xs) = (Head x):xs
+
+
+concat_qlist :: [String]-> String -> String
+concat_qlist (x:[]) base = x ++ " " ++ base
+concat_qlist (x:xs) base | base == ")" = (concat_qlist xs ((x) ++ base))
+                         | otherwise = (concat_qlist xs ((x) ++ " " ++ base))       
+
+
+-- CHANGE TO [STRING]
+quoted_list :: Parser [SchExpr]
+quoted_list = do
+             _ <- string "("
+             
+             q <- many quoteAtom 
+             _<- string ")"
+             return q
+             --if q == [] then return ["()"]
+             --else return ("(" ++ (concat_qlist (reverse q) ")"))
+
+symbol_quote :: Parser SchExpr
+symbol_quote = do
+               _ <- string "("
+               _ <- string "quote"
+               _ <- spaces
+               t <- quoteAtom
+               _ <- string ")"
+               return (Quote t) 
+              -- <|> symbol_QList
+
+symbol_QList :: Parser SchExpr
+symbol_QList = do 
+        _ <- string "("
+        _ <- string "quote"
+        _ <- spaces
+        t <- many quoteAtom
+        _ <- string ")"
+        return (QList t)
+
+
+qList :: Parser SchExpr
+qList = do
+        _ <- string "'"
+        t <- quoted_list 
+        return (QList t)
+
+qPatternList :: Parser SchExpr
+qPatternList = do
+        _ <- string "("
+        _ <- string "quote"
+        _ <- spaces
+        t <- quoted_list 
+        _ <- string ")"
+        return (QList t)
+
+
+qPattern :: Parser SchExpr
+qPattern = do
+        _ <- string "("
+        _ <- string "quote"
+        _ <- spaces
+        t <- quoteAtom
+        _ <- string ")"
+        return (Quote t)
+
+quote :: Parser SchExpr
+quote = do
+        _ <- string "'"
+        _ <- spaces
+        t <- quoteAtom
+        return (Quote t)
+        -- <|> qPattern
+        <|> qPattern 
+        <|> qPatternList
+        <|> qList
+
+quotes :: Parser String
+quotes = do
+            _ <- spaces
+            t <- some sch
+            return (t)
+

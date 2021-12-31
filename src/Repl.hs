@@ -35,9 +35,10 @@ schPrint (SchFloat i) | isInt i 5 = show (round i)
                       | otherwise = show i  
 schPrint (SchString s) = show s
 schPrint (SchQuote q) = q
+schPrint (SchEmpty ()) = "()"
 schPrint (SchQList []) = "()"
-schPrint (SchQList ( q: []))  = q ++ ")" 
-schPrint (SchQList (q:l))  =  q ++ " " ++ schPrint (SchQList l)
+-- schPrint (SchQList ( q: []))  = q ++ ")" 
+-- schPrint (SchQList (q:l))  =  q ++ " " ++ schPrint (SchQList l)
 schPrint (Error s) = s
 schPrint (SchBool b) | b == True = "#t"
                      | otherwise = "#f"
@@ -71,6 +72,7 @@ schPrint (Unbraced val) = schPrint val
 specialUnbracedPrint:: SchVal -> String
 specialUnbracedPrint (Carr (v))                 = schPrint (v)
 specialUnbracedPrint (Cdrr (DottedPair v1 v2))
+                    | v2 == (Cdrr(SchEmpty ()))    = schPrint v1
                     | v2 == (Cdrr(SchQList [])) = schPrint v1
                     | isPair v2 == False        = schPrint v1 ++ " . " ++ schPrint v2
                     | otherwise                 = schPrint v1 ++ " " ++ specialUnbracedPrint (v2)

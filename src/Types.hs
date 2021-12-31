@@ -32,15 +32,16 @@ data SchExpr = Number Int
             | Equals [SchExpr]
             | Let Defn SchExpr
             | Def Defn 
-            | Quote Ident 
+            | Quote SchExpr 
             | Lam [Ident] SchExpr
             | Apply SchExpr [SchExpr]
             | Bool Bool
             | Err String
-            | Car [SchExpr]
+            | Car [SchExpr] 
             | Cdr [SchExpr]
-            | QList [Ident]
+            | QList [SchExpr]
             | Head SchExpr
+            | QSymb Ident
             deriving (Show, Eq)
 
 
@@ -51,7 +52,7 @@ data SchVal = Atom Integer
              | Carr SchVal
              | Cdrr SchVal
              | SchHead SchVal
-             | SchQList [String]
+             | SchQList [SchVal]
              | DottedList [SchVal]
              | DottedPair SchVal SchVal
              | Unbraced SchVal

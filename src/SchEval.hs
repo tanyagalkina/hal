@@ -66,16 +66,22 @@ construction :: [SchExpr] -> Ctx -> SchVal
 construction (a:b) ctx = (DottedPair (Carr (eval a ctx)) (Cdrr (eval (head b) ctx)))
 
 
+consQList :: [SchExpr] -> Ctx -> SchVal
+--consQList []     ctx =  
+consQList (x:[]) ctx = eval (Cons [x ,(QList [])]) ctx
+consQList (x:xs) ctx = DottedPair (Carr (eval x ctx)) (Cdrr (consQList xs ctx))
+
 cdr :: [SchExpr] -> Ctx -> SchVal
 cdr (x:xs) ctx = case (eval x ctx)  of
                  (DottedPair a b) -> b
-                 (SchQList q) -> (SchQList $ ap_brace $ tail q)
+                 -- (SchQList q) -> (SchQList $ ap_brace $ tail q)
 
 
 car :: [SchExpr] -> Ctx -> SchVal
 car (x:xs) ctx = case (eval x ctx)  of
-                 (DottedPair a b) -> a
-                 (SchQList q)  -> (SchQList [drop 1 $ head q])
+                 (DottedPair (Carr a) b) -> a
+                 _ -> (SchFloat 9)
+                --- (SchQList q)  -> (SchQList [drop 1 $ head q])
 
 isAtom :: [SchExpr] -> Ctx -> SchVal
 isAtom e ctx = case (eval (head e) ctx) of 
@@ -106,26 +112,29 @@ elab ctx (Rec i (Lam args e)) =  ctx'
 takeFirst:: [String] -> [SchExpr] -> [Ident]
 takeFirst base ((Li (Var x:_)):[]) = x:base
 takeFirst base ((Li (Var x:_)):xx) = takeFirst (x:base) xx
--- takeFirst base (x:xs) = ["a", "b"]
 
 takeSecond:: [SchExpr] -> [SchExpr] -> [SchExpr]
 takeSecond base ((Li (Var x:xs)):[]) = (head xs):base
 takeSecond base ((Li (Var x:xs)):xx) = takeSecond ((head xs):base) xx
 
 
-elabor :: [SchExpr] -> Ctx -> Ctx
--- (SchVal nam val)
-elabor ((Li (Var x:xs)):[]) ctx = elab ctx (SchVal x (head xs))
-elabor ((Li (Var x:xs)):xx) ctx = elabor xx ctx
+-- elabor :: [SchExpr] -> Ctx -> Ctx
+-- -- (SchVal nam val)
+-- elabor ((Li (Var x:xs)):[]) ctx = elab ctx (SchVal x (head xs))
+-- elabor ((Li (Var x:xs)):xx) ctx = elabor xx ctx
 
-letSequence :: [SchExpr] -> SchExpr -> Ctx -> SchVal
-letSequence ins ex ctx =  eval (Lam (takeFirst [] ins) ex) (elabor ins ctx)
--- takeSecond base ((Li (_:x)):[]) = traceShow x base
--- takeSecond base ((Li (_:x)):xx) = traceShow x takeSecond base xx
+-- letSequence :: [SchExpr] -> SchExpr -> Ctx -> SchVal
+-- letSequence ins ex ctx =  eval (Lam (takeFirst [] ins) ex) (elabor ins ctx)
+-- -- takeSecond base ((Li (_:x)):[]) = traceShow x base
+-- -- takeSecond base ((Li (_:x)):xx) = traceShow x takeSecond base xx
 
-ap_brace :: [String] -> [String]
-ap_brace [] = []
-ap_brace (x:xs) = ('(':x):xs
+-- ap_brace :: [SchVal] -> [SchVal]
+-- ap_brace []        = []
+-- ap_brace list      = (Var "("):list
+-- -- ap_brace (x:xs) = ('(':x):xs
+
+el:: [SchExpr] -> [SchExpr]
+el list = reverse $ (Empty()):list
 
 trans :: [SchVal] -> [SchExpr] -> Ctx -> [SchVal]
 trans base (a: []) ctx = base ++ [(eval a ctx)]
@@ -133,6 +142,9 @@ trans base (a:as) ctx = trans (base ++ [(eval a ctx)]) as ctx
 
 
 eval :: SchExpr -> Ctx -> SchVal
+eval (QSymb symb)           ctx = (SchQuote symb)
+eval (Quote (Var q))   ctx      = (SchQuote q)
+eval (Quote k)         ctx      = eval k ctx
 eval (Empty ())        ctx      = SchEmpty ()
 eval (Err i)           ctx      = Error i
 eval (Lett ins ex)     ctx      = eval (Apply (Lam (takeFirst [] ins) ex) (takeSecond [] ins))  ctx 
@@ -140,6 +152,8 @@ eval (Lett ins ex)     ctx      = eval (Apply (Lam (takeFirst [] ins) ex) (takeS
 eval (Number i)        ctx      = (SchNumber i)
 eval (Str s)           ctx      = (SchString s)
 eval (Float i)         ctx      = SchFloat i
+--eval (Carr (Float i))         ctx      = SchFloat i
+--eval (Cdrr (Float i))         ctx      = SchFloat i
 eval (Plus e)          ctx      = addition 0.0 e ctx
 eval (Minus e)         ctx      = substraction [] e ctx 
 eval (Mult e)          ctx      = multiply 1 e ctx
@@ -160,13 +174,15 @@ eval (IsAtom e)        ctx      = isAtom e ctx
 eval (If g e1 e2)      ctx      = case eval g ctx of 
                                   (SchBool True) -> eval e1 ctx
                                   (SchBool False) -> eval e2 ctx
--- eval (Var i val)       ctx      =                            
+-- eval (Var i val)       ctx      =    
 eval (Var i)           ctx      = find ctx i
 eval (Let d e)         ctx      = eval e (elab ctx d)
 eval (Def d)           ctx      = Env (elab ctx d) 
 eval (Lam ids e)       ctx      = Closure ids e ctx
-eval (Quote q)         ctx      = SchQuote q
-eval (QList ql)        ctx      = SchQList $ ap_brace ql 
+eval (QList [])        ctx      = SchQList []
+eval (QList q)         ctx      = consQList q ctx
+       -- consQList q ctx 
+       -- construction q ctx 
 eval (Apply f xs)      ctx      = apply f' xs'
                                    where f'   = eval f ctx
                                          xs'  = map (flip eval ctx) xs                    
