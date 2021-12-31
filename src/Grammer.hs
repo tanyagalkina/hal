@@ -17,6 +17,7 @@ atom = do
                 <|> quote
                 <|> lambda
                 <|> define
+                <|> lett
                 <|> list
 
 defn :: Parser Defn
@@ -66,6 +67,26 @@ lambda = do
         _ <- string ")"
 
         return (Lam ins ex)
+
+
+lett :: Parser SchExpr
+lett = do 
+        _ <- string "("
+        _ <- string "let"
+
+        _ <- string "("  
+        ins  <- some list
+        _ <- string ")"
+         
+        ex <- list
+        _ <- string ")"
+
+        -- SHOULD I REVERSE OR NOT?
+        
+
+        return (Lett ins ex) 
+        -- ((Lam () ()) values)
+        
 
 list :: Parser SchExpr
 list = do

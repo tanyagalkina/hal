@@ -103,6 +103,26 @@ elab ctx (Rec i (Lam args e)) =  ctx'
                              where ctx' = (i, Closure args e ctx'):ctx
 
 
+takeFirst:: [String] -> [SchExpr] -> [Ident]
+takeFirst base ((Li (Var x:_)):[]) = x:base
+takeFirst base ((Li (Var x:_)):xx) = takeFirst (x:base) xx
+-- takeFirst base (x:xs) = ["a", "b"]
+
+takeSecond:: [SchExpr] -> [SchExpr] -> [SchExpr]
+takeSecond base ((Li (Var x:xs)):[]) = (head xs):base
+takeSecond base ((Li (Var x:xs)):xx) = takeSecond ((head xs):base) xx
+
+
+elabor :: [SchExpr] -> Ctx -> Ctx
+-- (SchVal nam val)
+elabor ((Li (Var x:xs)):[]) ctx = elab ctx (SchVal x (head xs))
+elabor ((Li (Var x:xs)):xx) ctx = elabor xx ctx
+
+letSequence :: [SchExpr] -> SchExpr -> Ctx -> SchVal
+letSequence ins ex ctx =  eval (Lam (takeFirst [] ins) ex) (elabor ins ctx)
+-- takeSecond base ((Li (_:x)):[]) = traceShow x base
+-- takeSecond base ((Li (_:x)):xx) = traceShow x takeSecond base xx
+
 ap_brace :: [String] -> [String]
 ap_brace [] = []
 ap_brace (x:xs) = ('(':x):xs
@@ -115,6 +135,8 @@ trans base (a:as) ctx = trans (base ++ [(eval a ctx)]) as ctx
 eval :: SchExpr -> Ctx -> SchVal
 eval (Empty ())        ctx      = SchEmpty ()
 eval (Err i)           ctx      = Error i
+eval (Lett ins ex)     ctx      = eval (Apply (Lam (takeFirst [] ins) ex) (takeSecond [] ins))  ctx 
+       --letSequence ins ex ctx
 eval (Number i)        ctx      = (SchNumber i)
 eval (Str s)           ctx      = (SchString s)
 eval (Float i)         ctx      = SchFloat i
@@ -138,8 +160,9 @@ eval (IsAtom e)        ctx      = isAtom e ctx
 eval (If g e1 e2)      ctx      = case eval g ctx of 
                                   (SchBool True) -> eval e1 ctx
                                   (SchBool False) -> eval e2 ctx
+-- eval (Var i val)       ctx      =                            
 eval (Var i)           ctx      = find ctx i
-eval (Let d e)         ctx      = eval e (elab ctx d )
+eval (Let d e)         ctx      = eval e (elab ctx d)
 eval (Def d)           ctx      = Env (elab ctx d) 
 eval (Lam ids e)       ctx      = Closure ids e ctx
 eval (Quote q)         ctx      = SchQuote q

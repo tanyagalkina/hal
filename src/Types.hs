@@ -13,7 +13,8 @@ data Defn = SchVal Ident SchExpr
 
 data SchExpr = Number Int
             | Str String
-            | Float Double    
+            | Float Double 
+            | Lett [SchExpr] SchExpr   
             | Plus [SchExpr] 
             | Minus [SchExpr]
             | Mult [SchExpr]
