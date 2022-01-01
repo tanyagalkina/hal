@@ -23,6 +23,7 @@ context = [
            ,("cons", Closure ["x", "y"] (Cons [Var "x", Var "y"]) context)
            ,("car", Closure ["x"] (Car [Var "x"]) context)
            ,("cdr", Closure ["x"] (Cdr [Var "x"]) context)
+           ,("cond", Closure ["x", "y", "z", "a"] (Cond [Var "x", Var "y", Var "z", Var "a"]) context)
           --  ,("define", Closure ["x"] (Def [Def]) context)
 
           --  ,("lambda", Closure ["x", "y"] (Lam [DottedPair "x", Var "y"]) context)

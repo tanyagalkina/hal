@@ -71,14 +71,33 @@ consQList :: [SchExpr] -> Ctx -> SchVal
 consQList (x:[]) ctx = eval (Cons [x ,(QList [])]) ctx
 consQList (x:xs) ctx = DottedPair (Carr (eval x ctx)) (Cdrr (consQList xs ctx))
 
+
+-- evalCond :: SchExpr -> SchVal
+-- evalCond (a, 
+
 conditional :: [SchExpr] -> Ctx -> SchVal
+
 conditional ((Li (x:xs)):[]) ctx 
               | eval (x) ctx /= (SchBool True) = Error "Cond error"
               | otherwise                      = eval (head xs) ctx
 conditional ((Li (x:xs)):xxs) ctx 
               | eval (x) ctx == (SchBool True) = eval (head xs) ctx
-              | otherwise = conditional xxs ctx                    
-                       
+              | otherwise = conditional xxs ctx 
+
+conditional ((Var x):xs) ctx | result /= (SchBool False) = result
+                             | otherwise = conditional xs ctx
+                              where result = eval (Var x) ctx
+
+
+-- eval (Var x) ctx of
+--                                (SchBool True , value) -> value
+--                                (SchBool False, _)  -> conditional xs ctx 
+             -- otherwise                      = eval (head x) ctx
+-- conditional (((Var x):xs):xxs) ctx 
+--               | eval (Var x) ctx == (SchBool True) = eval (head xs) ctx
+--               | otherwise = conditional xxs ctx                    
+
+-- conditional list ctx = traceShow list Error "NOT-EXHAUSTIVE"                       
 
 
 cdr :: [SchExpr] -> Ctx -> SchVal
@@ -108,9 +127,12 @@ find env i | found == [] = (Error $ "Exception: variable " ++ i ++ " is not boun
          
 
 apply :: SchVal -> [SchVal] -> SchVal
-apply (Closure ids e ctx) vals | (length ids /= length vals) = Error "Exception: incorrect argument count in call" 
-                               | otherwise = eval e (zip ids vals ++ ctx)
-apply _     _                   = Error "no such function" 
+apply (Closure ids e ctx) vals 
+--  (length ids /= length vals) = Error "Exception: incorrect argument count in call" 
+                             = eval e (zip ids vals ++ ctx)
+apply (SchBool False) vals = SchBool False
+apply (SchBool True) vals = head vals                             
+apply cl v                  = traceShow (cl, v) Error "no such function" 
 
 
 elab :: Ctx -> Defn -> Ctx
@@ -155,6 +177,8 @@ eval :: SchExpr -> Ctx -> SchVal
 eval (QSymb symb)           ctx = (SchQuote symb)
 eval (Quote (Var q))   ctx      = (SchQuote q)
 eval (Quote k)         ctx      = eval k ctx
+-- eval (CondArg (b, x))  ctx      | b == SchBool False = b
+--                                 | otherwise = head x
 --eval (Quote (Var q))   ctx      = (SchQuote q)
 --eval (Quote k)         ctx      = eval k ctx
 eval (Empty ())        ctx      = SchEmpty ()
@@ -180,7 +204,11 @@ eval (Bool b)          ctx      = SchBool b
 eval (Cons e)          ctx      = construction e ctx
 eval (Cond e)          ctx      = conditional e ctx 
 eval (ArgLi al)        ctx      = (List $ trans [] al ctx)
-eval (Li l)            ctx      = eval (Apply (head l)  (tail l)) ctx
+--eval (Li SchBool [SchVal])
+-- eval (Li ((SchBool False):lx))  ctx = SchBool False
+-- eval (Li ((SchBool True):lx)) ctx      = lx
+eval (Li li@(l:lx))            ctx      =   
+ eval (Apply (head li)  (tail li)) ctx
 -- eval (QList q)         ctx      =  SchQList q 
 eval (Equals (a:b))    ctx      = SchBool $ (eval a ctx) == (eval (head b) ctx)
 eval (IsAtom e)        ctx      = isAtom e ctx 
@@ -196,6 +224,8 @@ eval (QList [])        ctx      = SchQList []
 eval (QList q)         ctx      = consQList q ctx
        -- consQList q ctx 
        -- construction q ctx 
-eval (Apply f xs)      ctx      = apply f' xs'
-                                   where f'   = eval f ctx
+        -- eval e (zip ids vals ++ ctx)
+eval (Apply f xs)      ctx      =  apply f' xs'
+                                   where f'   =  eval f ctx
                                          xs'  = map (flip eval ctx) xs                    
+-- | f == (Var "cond") = eval (Cond map (flip eval ctx) xs) ctx 
