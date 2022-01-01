@@ -22,7 +22,8 @@ atom = do
                 <|> list
 
 quoteAtom :: Parser SchExpr
-quoteAtom = do 
+quoteAtom = do
+        _ <- spaces 
         n <- tokenFlt
         return n
         <|> quotedString
