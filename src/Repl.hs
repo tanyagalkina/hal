@@ -50,15 +50,6 @@ schPrint (Carr e) = schPrint e
 schPrint (DottedList l) = "(" ++ concatDotted "" l ++ ")"
 schPrint (Cdrr e) = schPrint e
 
--- schPrint (Unbraced (DottedPair a b)) | isPair b = schPrint (Unbraced a) ++ " " ++ schPrint (Unbraced b)
---                                      | (b == (Cdrr(SchQList []))) = schPrint (Unbraced a)
---                                      | otherwise = schPrint (Unbraced a) ++ " . " ++ schPrint (Unbraced b) 
-
-
--- schPrint (Unbraced (DottedPair a b)) | isPair b = schPrint (Unbraced a) ++ " " ++ schPrint (Unbraced b)
---                                      | b == (Cdrr(SchQList [])) = schPrint (Unbraced a) 
---                                      | otherwise = schPrint (Unbraced a) ++ " . " ++ schPrint (Unbraced b)
- 
 schPrint (DottedPair a b)
                   | isPair b = schPrint (DottedList [a, b])
 --  isPair b = "(" ++ schPrint a ++ build b

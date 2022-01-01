@@ -4,17 +4,22 @@ import Lexer
 import Types
 import Control.Applicative
 
+atoms :: Parser [SchExpr]
+atoms = do
+        atoms <- some atom
+        return atoms
+
 atom :: Parser SchExpr
 atom = do
                 n <- tokenFlt
                 return n
+                <|> boolean
                 <|> quote
                 <|> quotedString
                 <|> eq
                 <|> atm
                 <|> token
                 <|> symb
-                <|> boolean
                 <|> lambda
                 <|> define
                 <|> lett
