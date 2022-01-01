@@ -7,30 +7,22 @@ import Errors
 import Types
 import SchEval
 
-funcF:: SchVal
-funcF = SchString "HAHAHA!"
 
 context :: Ctx
 context = [
-            ("div", Closure ["x", "y"] (Div [Var "x", Var "y"]) context)
-           ,("mod", Closure ["x", "y"] (Mod [Var "x", Var "y"]) context)
-           ,("<", Closure ["x", "y"] (Less [Var "x", Var "y"]) context)
-           ,("+", Closure ["x", "y"] (Plus [Var "x", Var "y"]) context)
-           ,("-", Closure ["x", "y"] (Minus [Var "x", Var "y"]) context)
-           ,("*", Closure ["x", "y"] (Mult [Var "x", Var "y"]) context)
-           ,("eq?", Closure ["x", "y"] (Equals [Var "x", Var "y"]) context)
-           ,("atom?", Closure ["x"] (IsAtom [Var "x"]) context)
-           ,("cons", Closure ["x", "y"] (Cons [Var "x", Var "y"]) context)
-           ,("car", Closure ["x"] (Car [Var "x"]) context)
-           ,("cdr", Closure ["x"] (Cdr [Var "x"]) context)
-           ,("cond", Closure ["x", "y", "z", "a"] (Cond [Var "x", Var "y", Var "z", Var "a"]) context)
-          --  ,("define", Closure ["x"] (Def [Def]) context)
-
-          --  ,("lambda", Closure ["x", "y"] (Lam [DottedPair "x", Var "y"]) context)
-
-           ,("name", (SchString "Mama"))
-           ,("Three", (SchFloat 3.0))
-           ,("fun", funcF)
+            ("div", Closure ["!a", "!b"] (Div [Var "!a", Var "!b"]) context)
+           ,("mod", Closure ["!c", "!d"] (Mod [Var "!c", Var "!d"]) context)
+           ,("<", Closure ["!e", "!f"] (Less [Var "!e", Var "!f"]) context)
+           ,("+", Closure ["!g", "!h"] (Plus [Var "!g", Var "!h"]) context)
+           ,("-", Closure ["!i", "!j"] (Minus [Var "!i", Var "!j"]) context)
+           ,("*", Closure ["!k", "!l"] (Mult [Var "!k", Var "!l"]) context)
+           ,("eq?", Closure ["!m", "!n"] (Equals [Var "!m", Var "!n"]) context)
+           ,("atom?", Closure ["!o"] (IsAtom [Var "!o"]) context)
+           ,("cons", Closure ["!p", "!q"] (Cons [Var "!p", Var "!q"]) context)
+           ,("car", Closure ["!r"] (Car [Var "!r"]) context)
+           ,("cdr", Closure ["!t"] (Cdr [Var "!t"]) context)
+           ,("cond", Closure ["!u", "!v", "!w", "!x", "!y", "!z"] 
+                    (Cond [Var "!u", Var "!v", Var "!w", Var "!x", Var "!y", Var "!z"]) context)
           ]
 
 main :: IO ()

@@ -106,7 +106,8 @@ tokenFlt = do
 token :: Parser SchExpr
 token = do
             _ <- spaces
-            t <- some alphanum
+            -- t <- some isAlphaNum
+            t <- some letter
             return (Var t)
 
 var :: Parser String

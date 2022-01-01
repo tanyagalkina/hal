@@ -34,9 +34,10 @@ quoteAtom = do
 defn :: Parser Defn
 defn = do
         _ <- spaces
-        nam <- some alphanum
+        -- name <- some isAlphaNum
+        name <- some letter
         val <- atom
-        return (SchVal nam val)
+        return (SchVal name val)
 
 
 defineVal :: Parser SchExpr
@@ -55,7 +56,8 @@ define = do
         _ <- spaces
         _ <- string "("
         _ <- spaces 
-        name <- some alphanum
+        -- name <- some isAlphaNum
+        name <- some letter
         _ <- spaces
         ins  <-  some var
         _ <- string ")" 
