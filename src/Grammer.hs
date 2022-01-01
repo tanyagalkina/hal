@@ -18,6 +18,7 @@ atom = do
                 <|> lambda
                 <|> define
                 <|> lett
+                <|> cond
                 <|> list
 
 quoteAtom :: Parser SchExpr
@@ -25,7 +26,7 @@ quoteAtom = do
         n <- tokenFlt
         return n
         <|> quotedString
-        <|> token
+  -- <|> token
         <|> quoteSymb
 
 
@@ -95,7 +96,20 @@ lett = do
 
         return (Lett ins ex) 
         -- ((Lam () ()) values)
-        
+
+
+-- condArg :: Parser SchExpr
+-- condArgs = do
+--           _ <- 
+
+cond :: Parser SchExpr
+cond = do
+        _ <- string "("
+        _ <- string "cond"
+        body <- some list
+        _ <- string ")"
+        return (Cond body)
+
 
 list :: Parser SchExpr
 list = do

@@ -71,6 +71,16 @@ consQList :: [SchExpr] -> Ctx -> SchVal
 consQList (x:[]) ctx = eval (Cons [x ,(QList [])]) ctx
 consQList (x:xs) ctx = DottedPair (Carr (eval x ctx)) (Cdrr (consQList xs ctx))
 
+conditional :: [SchExpr] -> Ctx -> SchVal
+conditional ((Li (x:xs)):[]) ctx 
+              | eval (x) ctx /= (SchBool True) = Error "Cond error"
+              | otherwise                      = eval (head xs) ctx
+conditional ((Li (x:xs)):xxs) ctx 
+              | eval (x) ctx == (SchBool True) = eval (head xs) ctx
+              | otherwise = conditional xxs ctx                    
+                       
+
+
 cdr :: [SchExpr] -> Ctx -> SchVal
 cdr (x:xs) ctx = case (eval x ctx)  of
                  (DottedPair a b) -> b
@@ -145,6 +155,8 @@ eval :: SchExpr -> Ctx -> SchVal
 eval (QSymb symb)           ctx = (SchQuote symb)
 eval (Quote (Var q))   ctx      = (SchQuote q)
 eval (Quote k)         ctx      = eval k ctx
+--eval (Quote (Var q))   ctx      = (SchQuote q)
+--eval (Quote k)         ctx      = eval k ctx
 eval (Empty ())        ctx      = SchEmpty ()
 eval (Err i)           ctx      = Error i
 eval (Lett ins ex)     ctx      = eval (Apply (Lam (takeFirst [] ins) ex) (takeSecond [] ins))  ctx 
@@ -166,6 +178,7 @@ eval (Cdr e)           ctx      = cdr e ctx
 eval (Bool b)          ctx      = SchBool b
 --eval (DPair a b)       ctx      =   
 eval (Cons e)          ctx      = construction e ctx
+eval (Cond e)          ctx      = conditional e ctx 
 eval (ArgLi al)        ctx      = (List $ trans [] al ctx)
 eval (Li l)            ctx      = eval (Apply (head l)  (tail l)) ctx
 -- eval (QList q)         ctx      =  SchQList q 

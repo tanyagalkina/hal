@@ -101,63 +101,8 @@ tokenFlt = do
             return (Float f)
             <|> empty
 
--- concat_qlist :: [String]-> String -> String
--- concat_qlist (x:[]) base = x ++ " " ++ base
--- concat_qlist (x:xs) base | base == ")" = (concat_qlist xs ((x) ++ base))
---                          | otherwise = (concat_qlist xs ((x) ++ " " ++ base))       
 
 
--- -- CHANGE TO [STRING]
--- quoted_list :: Parser [String]
--- quoted_list = do
---              _ <- string "("
---              q <- many quotes 
---              _<- string ")"
---              return q
---              --if q == [] then return ["()"]
---              --else return ("(" ++ (concat_qlist (reverse q) ")"))
-
--- symbol_quote :: Parser SchExpr
--- symbol_quote = do
---                _ <- string "("
---                _ <- string "quote"
---                _ <- spaces
---                t <- some alphanum
---                _ <- string ")"
---                return (Quote t) 
---                <|> symbol_QList
-
--- symbol_QList :: Parser SchExpr
--- symbol_QList = do 
---         _ <- string "("
---         _ <- string "quote"
---         _ <- spaces
---         t <- quoted_list
---         _ <- string ")"
---         return (QList t)
-
-
-
--- qList :: Parser SchExpr
--- qList = do
---         _ <- string "'"
---         t <- quoted_list
---         return (QList t)
-
--- quote :: Parser SchExpr
--- quote = do
---         _ <- string "'"
---         t <- atom
---         return (Quote t)
---         <|> qList 
---         <|> symbol_quote
-
--- quotes :: Parser String
--- quotes = do
---             _ <- spaces
---             t <- some sch
---             return (t)
-            
 token :: Parser SchExpr
 token = do
             _ <- spaces
@@ -204,10 +149,17 @@ symb = do
         s <- (sat isMathSymbol) 
         return (Var [s])
 
+
+
+letter :: Parser Char
+letter = sat isAlphaNum <|> sat isSchemeSymbol
+
 quoteSymb :: Parser SchExpr
 quoteSymb = do
-        s <- (sat isMathSymbol) 
-        return (QSymb [s])
+        _ <- spaces 
+        s <- some letter
+        -- (sat isSchemeSymbol) <|> (sat isAlphaNum)
+        return (QSymb s)
 
 
 
