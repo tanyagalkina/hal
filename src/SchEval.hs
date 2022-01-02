@@ -73,7 +73,6 @@ consQList (x:xs) ctx = DottedPair (Carr (eval x ctx)) (Cdrr (consQList xs ctx))
 
 
 conditional :: [SchExpr] -> Ctx -> SchVal
-
 conditional ((Li (x:xs)):[]) ctx 
               | eval (x) ctx /= (SchBool True) = Error "Cond error"
               | otherwise                      = eval (head xs) ctx

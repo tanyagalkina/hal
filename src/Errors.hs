@@ -15,31 +15,16 @@ braveExit :: String -> Int -> IO ()
 braveExit str 0 = putStrLn str >> exitWith (ExitSuccess)
 braveExit str n = putStrLn str >> exitWith (ExitFailure n)
 
-
--- env = []
-
-
--- zeroto :: Int -> [Int]
--- zeroto n = [0..n]
-
--- cannotReadFile :: [String] -> Bool
--- cannotReadFile _ = False
-
-
--- mPrint :: [String] -> String -> Ctx -> IO ()
--- mPrint as ctx = if' (code == 84) (b (sP res) 84) (if' (as == []) (pSL (sP res) >> m as ct flag) (m as ct flag))
---                 where (code, res, ct) = evalSch s ctx
-
-
--- stripChars " \t" 
-
--- stripChars :: String -> String -> String
--- stripChars = filter . flip notElem
-
-
+b :: String -> Int -> IO ()
 b = braveExit
+
+sP :: SchVal -> String
 sP = schPrint
+
+pSL :: String -> IO ()
 pSL = putStrLn
+
+m :: [String] -> Ctx -> Bool -> IO () 
 m = manager
 
 direct_env_two :: SchVal -> Ctx ->(Int, SchVal, Ctx)
@@ -52,7 +37,6 @@ schedule :: [SchExpr] -> Ctx -> (Int, SchVal, Ctx)
 schedule (x:[]) ctx = direct_env (eval (x) ctx) ctx
 schedule (x:xs) ctx | code == 84 = (84, res, newctx)
                     | otherwise = schedule xs newctx
-  -- direct_env (eval (x) ctx) ctx
                       where (code, res, newctx) =  direct_env_two ( eval x ctx) ctx
 
 
@@ -65,15 +49,12 @@ evalSchTwo input  ctx | output == [] =  (84, (SchString "something went wrong"),
                           where output =  parse atoms input
 
 
--- if' (code == 84) (b (sP res) 84) (if' (as == []) (pSL (sP res) >> m as ct flag) (m as ct flag))
--- where (code, res, ct) = evalSchTwo (stripChars "\t\n\r" $ s) ctx
-
-
 manageInputFeed :: String -> [String] -> Ctx -> Bool -> IO ()
 manageInputFeed input as ctx flag
-                      | code == 84 = ( b ( sP res) 84)
-                      | otherwise = (if' (as == []) (pSL (sP res) >> m as ct flag) (m as ct flag))
-                                  where ( code, res, ct) = evalSchTwo (stripChars "\t\n\r" $ input) ctx
+          | code == 84 = ( b ( sP res) 84)
+          | otherwise = (if' (as == []) 
+              (pSL (sP res) >> m as ct flag) (m as ct flag))
+      where ( code, res, ct) = evalSchTwo (stripChars "\t\n\r" $ input) ctx
 
 
 manager :: [String] -> Ctx -> Bool -> IO ()
@@ -88,5 +69,3 @@ manager (a:as) ctx flag =
                           >> exitWith (ExitFailure 84)
               Right s -> 
                 manageInputFeed s as ctx flag
-                -- if' (code == 84) (b (sP res) 84) (if' (as == []) (pSL (sP res) >> m as ct flag) (m as ct flag))
-                -- where (code, res, ct) = evalSchTwo (stripChars "\t\n\r" $ s) ctx

@@ -193,9 +193,3 @@ quote = do
         <|> qPatternList
         <|> qList
 
--- quotes :: Parser String
--- quotes = do
---             _ <- spaces
---             t <- some sch
---             return (t)
-
