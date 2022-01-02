@@ -101,15 +101,19 @@ conditional ((Var x):xs) ctx | result /= (SchBool False) = result
 
 
 cdr :: [SchExpr] -> Ctx -> SchVal
+-- cdr (x:xs) ctx = eval x ctx
+--cdr (x:xs) ctx = traceShow x SchString "found"
 cdr (x:xs) ctx = case (eval x ctx)  of
-                 (DottedPair a b) -> b
-                 -- (SchQList q) -> (SchQList $ ap_brace $ tail q)
-
+                 (DottedPair (Carr a) (Cdrr b)) -> b 
+       --        --    a -> SchEmpty ()
+              --    ((SchEmpty ()))    -> SchEmpty()
+              --    ((SchQList [])) -> SchQList []
+                 
 
 car :: [SchExpr] -> Ctx -> SchVal
 car (x:xs) ctx = case (eval x ctx)  of
                  (DottedPair (Carr a) b) -> a
-                 _ -> (SchFloat 9)
+                -- _ -> (SchFloat 9)
                 --- (SchQList q)  -> (SchQList [drop 1 $ head q])
 
 isAtom :: [SchExpr] -> Ctx -> SchVal
