@@ -32,14 +32,12 @@ quoteAtom = do
         n <- tokenFlt
         return n
         <|> quotedString
-  -- <|> token
         <|> quoteSymb
 
 
 defn :: Parser Defn
 defn = do
         _ <- spaces
-        -- name <- some isAlphaNum
         name <- some letter
         val <- atom
         return (SchVal name val)
@@ -61,7 +59,6 @@ define = do
         _ <- spaces
         _ <- string "("
         _ <- spaces 
-        -- name <- some isAlphaNum
         name <- some letter
         _ <- spaces
         ins  <-  some var
@@ -91,24 +88,13 @@ lett :: Parser SchExpr
 lett = do 
         _ <- string "("
         _ <- string "let"
-
         _ <- string "("  
         ins  <- some list
         _ <- string ")"
-         
         ex <- list
         _ <- string ")"
-
-        -- SHOULD I REVERSE OR NOT?
-        
-
         return (Lett ins ex) 
-        -- ((Lam () ()) values)
 
-
--- condArg :: Parser SchExpr
--- condArgs = do
---           _ <- 
 
 cond :: Parser SchExpr
 cond = do
@@ -131,8 +117,6 @@ listMan :: [SchExpr] -> SchExpr
 listMan (Var "+": xs) = (Plus xs)
 listMan (Var "-":xs) = (Minus xs)
 listMan (Var "*": xs) = (Mult xs)
--- listMan (Var "quote":xs) = (QList xs)
--- listMan (Var "cons":xs) = (Li $ processFirst xs)
 listMan []   = Err "Invalid Sytax"
 listMan list = (Li list)             
 
@@ -147,16 +131,12 @@ concat_qlist (x:xs) base | base == ")" = (concat_qlist xs ((x) ++ base))
                          | otherwise = (concat_qlist xs ((x) ++ " " ++ base))       
 
 
--- CHANGE TO [STRING]
 quoted_list :: Parser [SchExpr]
 quoted_list = do
              _ <- string "("
-             
              q <- many quoteAtom 
              _<- string ")"
              return q
-             --if q == [] then return ["()"]
-             --else return ("(" ++ (concat_qlist (reverse q) ")"))
 
 symbol_quote :: Parser SchExpr
 symbol_quote = do
@@ -209,14 +189,13 @@ quote = do
         _ <- spaces
         t <- quoteAtom
         return (Quote t)
-        -- <|> qPattern
         <|> qPattern 
         <|> qPatternList
         <|> qList
 
-quotes :: Parser String
-quotes = do
-            _ <- spaces
-            t <- some sch
-            return (t)
+-- quotes :: Parser String
+-- quotes = do
+--             _ <- spaces
+--             t <- some sch
+--             return (t)
 

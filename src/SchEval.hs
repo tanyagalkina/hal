@@ -72,9 +72,6 @@ consQList (x:[]) ctx = eval (Cons [x ,(QList [])]) ctx
 consQList (x:xs) ctx = DottedPair (Carr (eval x ctx)) (Cdrr (consQList xs ctx))
 
 
--- evalCond :: SchExpr -> SchVal
--- evalCond (a, 
-
 conditional :: [SchExpr] -> Ctx -> SchVal
 
 conditional ((Li (x:xs)):[]) ctx 
@@ -89,32 +86,14 @@ conditional ((Var x):xs) ctx | result /= (SchBool False) = result
                               where result = eval (Var x) ctx
 
 
--- eval (Var x) ctx of
---                                (SchBool True , value) -> value
---                                (SchBool False, _)  -> conditional xs ctx 
-             -- otherwise                      = eval (head x) ctx
--- conditional (((Var x):xs):xxs) ctx 
---               | eval (Var x) ctx == (SchBool True) = eval (head xs) ctx
---               | otherwise = conditional xxs ctx                    
-
--- conditional list ctx = traceShow list Error "NOT-EXHAUSTIVE"                       
-
-
 cdr :: [SchExpr] -> Ctx -> SchVal
--- cdr (x:xs) ctx = eval x ctx
---cdr (x:xs) ctx = traceShow x SchString "found"
 cdr (x:xs) ctx = case (eval x ctx)  of
                  (DottedPair (Carr a) (Cdrr b)) -> b 
-       --        --    a -> SchEmpty ()
-              --    ((SchEmpty ()))    -> SchEmpty()
-              --    ((SchQList [])) -> SchQList []
                  
 
 car :: [SchExpr] -> Ctx -> SchVal
 car (x:xs) ctx = case (eval x ctx)  of
                  (DottedPair (Carr a) b) -> a
-                -- _ -> (SchFloat 9)
-                --- (SchQList q)  -> (SchQList [drop 1 $ head q])
 
 isAtom :: [SchExpr] -> Ctx -> SchVal
 isAtom e ctx = case (eval (head e) ctx) of 
@@ -153,22 +132,6 @@ takeSecond:: [SchExpr] -> [SchExpr] -> [SchExpr]
 takeSecond base ((Li (Var x:xs)):[]) = (head xs):base
 takeSecond base ((Li (Var x:xs)):xx) = takeSecond ((head xs):base) xx
 
-
--- elabor :: [SchExpr] -> Ctx -> Ctx
--- -- (SchVal nam val)
--- elabor ((Li (Var x:xs)):[]) ctx = elab ctx (SchVal x (head xs))
--- elabor ((Li (Var x:xs)):xx) ctx = elabor xx ctx
-
--- letSequence :: [SchExpr] -> SchExpr -> Ctx -> SchVal
--- letSequence ins ex ctx =  eval (Lam (takeFirst [] ins) ex) (elabor ins ctx)
--- -- takeSecond base ((Li (_:x)):[]) = traceShow x base
--- -- takeSecond base ((Li (_:x)):xx) = traceShow x takeSecond base xx
-
--- ap_brace :: [SchVal] -> [SchVal]
--- ap_brace []        = []
--- ap_brace list      = (Var "("):list
--- -- ap_brace (x:xs) = ('(':x):xs
-
 el:: [SchExpr] -> [SchExpr]
 el list = reverse $ (Empty()):list
 
@@ -181,10 +144,6 @@ eval :: SchExpr -> Ctx -> SchVal
 eval (QSymb symb)           ctx = (SchQuote symb)
 eval (Quote (Var q))   ctx      = (SchQuote q)
 eval (Quote k)         ctx      = eval k ctx
--- eval (CondArg (b, x))  ctx      | b == SchBool False = b
---                                 | otherwise = head x
---eval (Quote (Var q))   ctx      = (SchQuote q)
---eval (Quote k)         ctx      = eval k ctx
 eval (Empty ())        ctx      = SchEmpty ()
 eval (Err i)           ctx      = Error i
 eval (Lett ins ex)     ctx      = eval (Apply (Lam (takeFirst [] ins) ex) (takeSecond [] ins))  ctx 
@@ -192,8 +151,6 @@ eval (Lett ins ex)     ctx      = eval (Apply (Lam (takeFirst [] ins) ex) (takeS
 eval (Number i)        ctx      = (SchNumber i)
 eval (Str s)           ctx      = (SchString s)
 eval (Float i)         ctx      = SchFloat i
---eval (Carr (Float i))         ctx      = SchFloat i
---eval (Cdrr (Float i))         ctx      = SchFloat i
 eval (Plus e)          ctx      = addition 0.0 e ctx
 eval (Minus e)         ctx      = substraction [] e ctx 
 eval (Mult e)          ctx      = multiply 1 e ctx
@@ -202,34 +159,23 @@ eval (Mod e)           ctx      = modulo e ctx
 eval (Less e)          ctx      = less e ctx
 eval (Car e)           ctx      = car e ctx
 eval (Cdr e)           ctx      = cdr e ctx 
--- eval (Cdr e)           ctx      = 
 eval (Bool b)          ctx      = SchBool b
---eval (DPair a b)       ctx      =   
 eval (Cons e)          ctx      = construction e ctx
 eval (Cond e)          ctx      = conditional e ctx 
 eval (ArgLi al)        ctx      = (List $ trans [] al ctx)
---eval (Li SchBool [SchVal])
--- eval (Li ((SchBool False):lx))  ctx = SchBool False
--- eval (Li ((SchBool True):lx)) ctx      = lx
 eval (Li li@(l:lx))            ctx      =   
- eval (Apply (head li)  (tail li)) ctx
--- eval (QList q)         ctx      =  SchQList q 
+                             eval (Apply (head li)  (tail li)) ctx
 eval (Equals (a:b))    ctx      = SchBool $ (eval a ctx) == (eval (head b) ctx)
 eval (IsAtom e)        ctx      = isAtom e ctx 
 eval (If g e1 e2)      ctx      = case eval g ctx of 
                                   (SchBool True) -> eval e1 ctx
                                   (SchBool False) -> eval e2 ctx
--- eval (Var i val)       ctx      =    
 eval (Var i)           ctx      = find ctx i
 eval (Let d e)         ctx      = eval e (elab ctx d)
 eval (Def d)           ctx      = Env (elab ctx d) 
 eval (Lam ids e)       ctx      = Closure ids e ctx
 eval (QList [])        ctx      = SchQList []
 eval (QList q)         ctx      = consQList q ctx
-       -- consQList q ctx 
-       -- construction q ctx 
-        -- eval e (zip ids vals ++ ctx)
 eval (Apply f xs)      ctx      =  apply f' xs'
                                    where f'   =  eval f ctx
                                          xs'  = map (flip eval ctx) xs                    
--- | f == (Var "cond") = eval (Cond map (flip eval ctx) xs) ctx 

@@ -102,7 +102,6 @@ tokenFlt = do
             <|> empty
 
 
-
 token :: Parser SchExpr
 token = do
             _ <- spaces
@@ -151,7 +150,6 @@ symb = do
         return (Var [s])
 
 
-
 letter :: Parser Char
 letter = sat isAlphaNum <|> sat isSchemeSymbol
 
@@ -161,7 +159,6 @@ quoteSymb = do
         s <- some letter
         -- (sat isSchemeSymbol) <|> (sat isAlphaNum)
         return (QSymb s)
-
 
 
 spaces :: Parser String
@@ -176,34 +173,10 @@ atleastoneSpace = do
         return ' '
         <|> empty
 
-dot :: Parser String
-dot = do
-        _ <-atleastoneSpace
-        --return " . " 
-        _ <- char '.' 
-        _ <- char ' '
-        return " . "
-        <|> empty
-
-
-checkString :: Parser String
-checkString = do
-        _ <- string "Chorowo!"
-        return "Chorowo!"
-        <|> return []
-
-
-parseSchExpr :: Parser SchVal
-parseSchExpr = do
-              _ <- string ""
-              return $ AtmString "STRING"  
-
-
 quotedString :: Parser SchExpr
 quotedString = do
              _ <- spaces
              _ <- char '"'
              quot <- daten
              _ <- char '"' 
-             return (Str quot)
-             
+             return (Str quot)             

@@ -44,14 +44,16 @@ m = manager
 
 direct_env_two :: SchVal -> Ctx ->(Int, SchVal, Ctx)
 direct_env_two (Env i) old = (0, SchQuote (fst $ head i), i)
+direct_env_two (Error i) old = (84, (SchQuote i), old)
 direct_env_two n      old  = (0, n, old)
 
 
 schedule :: [SchExpr] -> Ctx -> (Int, SchVal, Ctx)
 schedule (x:[]) ctx = direct_env (eval (x) ctx) ctx
-schedule (x:xs) ctx = schedule xs newctx
+schedule (x:xs) ctx | code == 84 = (84, res, newctx)
+                    | otherwise = schedule xs newctx
   -- direct_env (eval (x) ctx) ctx
-                      where (a, b, newctx) =  direct_env ( eval x ctx) ctx
+                      where (code, res, newctx) =  direct_env_two ( eval x ctx) ctx
 
 
 evalSchTwo :: String -> Ctx -> (Int, SchVal, Ctx)
@@ -63,13 +65,17 @@ evalSchTwo input  ctx | output == [] =  (84, (SchString "something went wrong"),
                           where output =  parse atoms input
 
 
--- manageInputFeed :: String -> [String] -> Ctx -> Bool -> IO ()
--- manageInputFeed input as ctx flag = 
+-- if' (code == 84) (b (sP res) 84) (if' (as == []) (pSL (sP res) >> m as ct flag) (m as ct flag))
+-- where (code, res, ct) = evalSchTwo (stripChars "\t\n\r" $ s) ctx
 
 
+manageInputFeed :: String -> [String] -> Ctx -> Bool -> IO ()
+manageInputFeed input as ctx flag
+                      | code == 84 = ( b ( sP res) 84)
+                      | otherwise = (if' (as == []) (pSL (sP res) >> m as ct flag) (m as ct flag))
+                                  where ( code, res, ct) = evalSchTwo (stripChars "\t\n\r" $ input) ctx
 
 
---- ---------[ARGS]   -> CTX
 manager :: [String] -> Ctx -> Bool -> IO ()
 manager ("-i":as) ctx flag = manager as ctx flag
 manager [] ctx True = repl ctx
@@ -80,9 +86,7 @@ manager (a:as) ctx flag =
           case src of
               Left e ->  print (e :: IOError)
                           >> exitWith (ExitFailure 84)
-
-    --   as == [] MEANS IT IS LAST FILE NOW HAVE TO FIX AND CHANGE IT TO LAST EXPRESSION         
               Right s -> 
-                -- manageInputFeed s as ctx flag
-                if' (code == 84) (b (sP res) 84) (if' (as == []) (pSL (sP res) >> m as ct flag) (m as ct flag))
-                where (code, res, ct) = evalSchTwo (stripChars "\t\n\r" $ s) ctx
+                manageInputFeed s as ctx flag
+                -- if' (code == 84) (b (sP res) 84) (if' (as == []) (pSL (sP res) >> m as ct flag) (m as ct flag))
+                -- where (code, res, ct) = evalSchTwo (stripChars "\t\n\r" $ s) ctx
