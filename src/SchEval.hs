@@ -63,6 +63,7 @@ substraction base (x:xs) ctx = let (SchFloat n1) = eval x ctx in
 
 
 construction :: [SchExpr] -> Ctx -> SchVal
+-- construction (a:b) ctx | (drop 1 b) /= [] = Error "cons takes exactly two args"
 construction (a:b) ctx = (DottedPair (Carr (eval a ctx)) (Cdrr (eval (head b) ctx)))
 
 
@@ -88,11 +89,12 @@ conditional ((Var x):xs) ctx | result /= (SchBool False) = result
 cdr :: [SchExpr] -> Ctx -> SchVal
 cdr (x:xs) ctx = case (eval x ctx)  of
                  (DottedPair (Carr a) (Cdrr b)) -> b 
-                 
+                 _ -> Error "Expression is not a pair"
 
 car :: [SchExpr] -> Ctx -> SchVal
 car (x:xs) ctx = case (eval x ctx)  of
                  (DottedPair (Carr a) b) -> a
+                 _ -> Error "Expression is not a pair"
 
 isAtom :: [SchExpr] -> Ctx -> SchVal
 isAtom e ctx = case (eval (head e) ctx) of 
